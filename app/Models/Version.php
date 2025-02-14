@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class TitleVersion extends Model
+class Version extends Model
 {
     /**
 	 * The attributes that are mass assignable.
@@ -35,6 +35,8 @@ class TitleVersion extends Model
     {
         return [
             'date' => 'date',
+			'amendment_date' => 'date',
+			'issue_date' => 'date',
 			'children' => 'json',
         ];
     }

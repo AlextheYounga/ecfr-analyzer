@@ -15,8 +15,8 @@ class DatabaseSeeder extends Seeder
     {
 		$this->call([
 			TitleSeeder::class,
-			TitleVersionSeeder::class,
-			TitleStructureSeeder::class,
+			VersionSeeder::class,
+			// StructureSeeder::class,
 		]);
     }
 }

@@ -35,10 +35,17 @@ class Title extends Model
     }
 
 	public function versions() {
-		return $this->hasMany(TitleVersion::class);
+		return $this->hasMany(Version::class);
 	}
 
 	public function structures() {
-		return $this->hasMany(TitleStructure::class);
+		return $this->hasMany(Structure::class);
+	}
+
+	public function latestVersion()
+	{
+		return $this->versions()
+			->orderByDesc('date')
+			->first();
 	}
 }

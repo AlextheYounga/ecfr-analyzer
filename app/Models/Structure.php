@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
-class TitleStructure extends Model
+class Structure extends Model
 {
     
 	/**
@@ -22,7 +23,7 @@ class TitleStructure extends Model
 		'label_level',
 		'label_description',
 		'size',
-		'structure_reference',
+		'children',
 	];
 
 	/**
@@ -34,6 +35,7 @@ class TitleStructure extends Model
     {
         return [
             'date' => 'date',
+			'children' => 'blob'
         ];
     }
 
@@ -57,13 +59,31 @@ class TitleStructure extends Model
 		if (empty($fileReference)) {
 			return [];
 		}
-		$structureJsonStorage = Storage::disk('local')->get($fileReference);
-		$structure = json_decode($structureJsonStorage, true);
+		$structureZipFile = storage_path('app/private/' . $fileReference . '.zip');
+		$structure = $this->readZipFile($structureZipFile);
 		$children = $structure['children'] ?? [];
 		return $children;
     }
 
 	public function title() {
 		return $this->belongsTo(Title::class);
+	}
+
+	private function readZipFile($zipFile) {
+		$zip = new ZipArchive;
+		if ($zip->open($zipFile) === TRUE) {
+			$fileName = $zip->getNameIndex(0); // first file inside zip
+			$fileContent = $zip->getFromName($fileName);
+			$zip->close();
+		
+			$jsonData = json_decode($fileContent, true);
+			if ($jsonData !== null) {
+				return $jsonData;
+			} else {
+				return [];
+			}
+		} else {
+			return [];
+		}
 	}
 }

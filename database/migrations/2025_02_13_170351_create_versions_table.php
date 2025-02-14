@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('title_structures', function (Blueprint $table) {
+        Schema::create('versions', function (Blueprint $table) {
             $table->id();
 			$table->foreignId('title_id')->constrained()->onDelete('cascade');
 			$table->date('date');
+			$table->date('amendment_date')->nullable();
+			$table->date('issue_date')->nullable();
 			$table->string('identifier')->nullable();
-			$table->string('label')->nullable();
-			$table->string('label_level')->nullable();
-			$table->string('label_description')->nullable();
-			$table->integer('size')->nullable();
-			$table->string('structure_reference')
-			->comment('This points to a JSON file saved in storage')
-			->nullable();
+			$table->string('name')->nullable();
+			$table->string('part')->nullable();
+			$table->boolean('substantive')->nullable();
+			$table->boolean('removed')->nullable();
+			$table->string('subpart')->nullable();
+			$table->string('title')->nullable();
+			$table->string('type')->nullable();
             $table->timestamps();
         });
     }
@@ -32,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('title_structures');
+        Schema::dropIfExists('versions');
     }
 };

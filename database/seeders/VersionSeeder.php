@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\TitleVersion;
+use App\Models\Version;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
-class TitleVersionSeeder extends Seeder
+class VersionSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-		TitleVersion::truncate();
+		Version::truncate();
 
 		$jsonStorage = Storage::disk('local')->get('titles.json');
 		$titles = json_decode($jsonStorage, true);
@@ -35,7 +35,7 @@ class TitleVersionSeeder extends Seeder
 			// Split into chunks for bulk insert
 			$chunks = array_chunk($data, 999);
 			foreach($chunks as $chunk) {
-				TitleVersion::insert($chunk);
+				Version::insert($chunk);
 			}
 		}
     }

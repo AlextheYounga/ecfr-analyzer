@@ -28,8 +28,7 @@ class DownloadECFRVersions extends Command
     public function handle()
     {
 		$ecfr = new ECFRService();
-		$titleJsonStorage = Storage::disk('local')->get('titles.json');
-		$titles = json_decode($titleJsonStorage, true);
+		$titles = $this->getTitles();
 		
 		// Download Versions
 		foreach($titles['titles'] as $title) {
@@ -42,4 +41,10 @@ class DownloadECFRVersions extends Command
 			sleep(0.5);
 		}
     }
+
+	private function getTitles() {
+		$titleJsonStorage = Storage::disk('local')->get('titles.json');
+		$titles = json_decode($titleJsonStorage, true);
+		return $titles;
+	}
 }

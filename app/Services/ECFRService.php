@@ -35,7 +35,14 @@ class ECFRService
 		}
 	}
 
-	public function fetchDocuments() {
-		//
+	public function fetchDocument($titleNumber, $versionDate) {
+		$apiUrl = $this->apiRoot . 'versioner/v1/full/' . $versionDate . '/title-' . $titleNumber . '.xml';
+		try {
+			$document = file_get_contents($apiUrl);
+			return $document;
+		} catch (\Exception $e) {
+			echo "Error fetching documents for title " . $titleNumber . "\n";
+			echo $e->getMessage() . "\n";
+		}
 	}
 }

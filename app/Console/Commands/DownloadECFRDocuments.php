@@ -6,21 +6,21 @@ use Illuminate\Console\Command;
 use App\Services\ECFRService;
 use Illuminate\Support\Facades\Storage;
 
-class DownloadECFRStructures extends Command
+class DownloadECFRDocuments extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'ecfr:structures';
+    protected $signature = 'ecfr:documents';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Download eCFR title structures from API';
+    protected $description = 'Command description';
 
     /**
      * Execute the console command.
@@ -28,22 +28,27 @@ class DownloadECFRStructures extends Command
     public function handle()
     {
 		$ecfr = new ECFRService();
-		$titles = $this->getTitles();
+        $titles = $this->getTitles();
 
-		// Download Structures
 		foreach($titles['titles'] as $title) {
 			$titleNumber = $title['number'];
 			$versions = $this->getTitleVersions($titleNumber);
 			$uniqueDates = array_unique(array_column($versions['content_versions'], 'date'));
 
 			foreach($uniqueDates as $versionDate) {
-				// Fetch from API
-				$this->info("Fetching structure for title " . $title['number'] . ' on date ' . $versionDate);
-				$structure = $ecfr->fetchStructure($titleNumber, $versionDate);
+				$filename = 'documents/title-' . $titleNumber .'/title-' . $titleNumber . '-' . $versionDate . '.json';
 
-				$filename = 'structure/title-' . $titleNumber . '-' . $versionDate . '.json';
-				Storage::disk('local')->put($filename, json_encode($structure));
-				sleep(0.5);
+				// Check if file already exists
+				if (Storage::disk('local')->exists($filename)) {
+					$this->info("File already exists for title " . $title['number'] . ' on date ' . $versionDate);
+					continue;
+				}
+				
+				// Fetch from API
+				$this->info("Fetching document for title " . $title['number'] . ' on date ' . $versionDate);
+				$xml = $ecfr->fetchDocument($titleNumber, $versionDate);
+				Storage::disk('local')->put($filename, json_encode(simplexml_load_string($xml)));
+				sleep(1);
 			}
 		}
     }

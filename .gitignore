@@ -1,4 +1,6 @@
 __trash__
+.DS_Store
+*.DS_Store
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules

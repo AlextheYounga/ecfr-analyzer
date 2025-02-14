@@ -73,12 +73,8 @@ class GetLatestTitleDocuments extends Command
 		$zipPath = storage_path("app/private/{$zipFilename}");
 
 		if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-			// Prepare the JSON data (no need to save it to disk)
-			$jsonData = json_encode($data);
-
 			// Add the JSON data as a file in the zip
-			$zip->addFromString(basename($filename), $jsonData);
-
+			$zip->addFromString(basename($filename), $data);
 			// Close the zip archive
 			$zip->close();
 		}

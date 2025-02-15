@@ -34,7 +34,7 @@ class GetAgencies extends Command
 		$agencies = $ecfr->fetchAgencies();
 
 		foreach($agencies['agencies'] as $agency) {
-			$this->info("Updating agency record for " . $agency['name']);
+			$this->info("Saving agency record for " . $agency['name']);
 
 			$agencyRecord = $this->saveAgency($agency);	
 			if ($agency['children']) {

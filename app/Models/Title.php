@@ -18,7 +18,7 @@ class Title extends Model
 		'latest_issue_date',
 		'up_to_date_as_of',
 		'reserved',
-		'structure'
+		'structure_reference'
     ];
 
 	/**
@@ -32,8 +32,22 @@ class Title extends Model
             'latest_amended_on' => 'date',
             'latest_issue_date' => 'date',
 			'up_to_date_as_of' => 'date',
-			'structure' => 'json'
         ];
+    }
+
+	/**
+     * Get the title structure from the JSON file
+     *
+     * @return array<string, string>
+     */
+	public function getStructure()
+    {
+		$fileReference = $this->structure_reference;
+		if (empty($fileReference)) {
+			return [];
+		}
+		$structure = file_get_contents($fileReference);
+		return json_decode($structure, true);
     }
 
 	public function versions() {

@@ -42,7 +42,7 @@ class GetCurrentTitleDocuments extends Command
 				continue;
 			}
 
-			$filename = 'ecfr/current/title-' . $title->number . '.xml';
+			$filename = 'ecfr/current/documents/xml/title-' . $title->number . '.xml';
 
 			// Fetch from API
 			$xml = $ecfr->fetchDocument($title->number, $versionDate);

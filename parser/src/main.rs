@@ -82,8 +82,8 @@ fn main() -> Result<()> {
         })?
         .collect();
 
-    let title_file_directory = "./storage/app/private/ecfr/current";
-    let markdown_directory = "./storage/app/private/ecfr/markdown";
+    let title_file_directory = "./storage/app/private/ecfr/current/xml";
+    let markdown_directory = "./storage/app/private/ecfr/current/markdown";
 
     // Parallel loop. FAST (may be too much for production)
     title_results.into_par_iter().for_each(|title_result| {

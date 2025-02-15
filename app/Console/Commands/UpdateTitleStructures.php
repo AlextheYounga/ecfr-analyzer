@@ -40,14 +40,13 @@ class UpdateTitleStructures extends Command
 			}
 
 			// Ensure directory exists
-			Storage::disk('local')->makeDirectory('ecfr/structure');
+			Storage::disk('local')->makeDirectory('ecfr/current/structure');
 
 			$titleNumber = (string) $title->number;
 			$versionDate = $title->latest_issue_date->format('Y-m-d');
 			$structure = $ecfr->fetchStructure($titleNumber, $versionDate);
-			$filepath = 'ecfr/structure/title-' . $titleNumber . '-structure.json';
+			$filepath = 'ecfr/current/structure/title-' . $titleNumber . '-structure.json';
 			Storage::disk('local')->put($filepath, json_encode($structure));	
-
 			$title->structure_reference = storage_path('app/private/'. $filepath);	
 			$title->save();	
 		}	

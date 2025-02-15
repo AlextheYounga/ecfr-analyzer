@@ -35,6 +35,17 @@ class Title extends Model
         ];
     }
 
+	public function versions() {
+		return $this->hasMany(Version::class);
+	}
+
+	public function latestVersion()
+	{
+		return $this->versions()
+			->orderByDesc('date')
+			->first();
+	}
+
 	/**
      * Get the title structure from the JSON file
      *
@@ -49,15 +60,4 @@ class Title extends Model
 		$structure = file_get_contents($fileReference);
 		return json_decode($structure, true);
     }
-
-	public function versions() {
-		return $this->hasMany(Version::class);
-	}
-
-	public function latestVersion()
-	{
-		return $this->versions()
-			->orderByDesc('date')
-			->first();
-	}
 }

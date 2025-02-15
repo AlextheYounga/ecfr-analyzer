@@ -7,7 +7,9 @@ use App\Services\ECFRService;
 use App\Models\Title;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-class GetLatestTitleDocuments extends Command
+
+
+class GetCurrentTitleDocuments extends Command
 {
     /**
      * The name and signature of the console command.

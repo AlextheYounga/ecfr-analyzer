@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('agencies', function (Blueprint $table) {
             $table->id();
+			$table->foreignId('parent_id')->nullable();
 			$table->string('name');
-			$table->string('short_name');
-			$table->string('display_name');
-			$table->string('sortable_name');
+			$table->string('short_name')->nullable();
+			$table->string('display_name')->nullable();
+			$table->string('sortable_name')->nullable();
 			$table->string('slug');
-			$table->json('children')->nullable();
 			$table->json('cfr_references')->nullable();	
             $table->timestamps();
         });

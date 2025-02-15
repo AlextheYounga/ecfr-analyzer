@@ -1,4 +1,3 @@
-mod flatten_structure;
 use std::{ fmt::Debug, fs };
 use std::collections::HashMap;
 use std::io::BufReader;
@@ -7,7 +6,6 @@ use rayon::prelude::*;
 use rusqlite::{ Connection, Result };
 use xmltree::{ Element, XMLNode };
 use serde_json::Value;
-use flatten_structure::flatten_structure;
 use html2md::parse_html;
 
 #[derive(Debug)]
@@ -16,6 +14,7 @@ struct TitleRecord {
     structure_reference: String,
 }
 
+// Talk to our Laravel DB
 fn db_connection() -> Result<Connection> {
     // Connect to SQLite database (or create it if it doesn't exist)
     Connection::open("database/database.sqlite")
@@ -24,7 +23,7 @@ fn db_connection() -> Result<Connection> {
 /*
  * One-time DFS to build a map of all SECTION elements keyed by their "N" attribute.
  */
-fn build_section_map<'a>(elem: &'a Element, map: &mut HashMap<String, &'a Element>) {
+ fn build_section_map<'a>(elem: &'a Element, map: &mut HashMap<String, &'a Element>) {
     if let Some(type_attr) = elem.attributes.get("TYPE") {
         // If it's a SECTION, save under the "N" attribute
         if type_attr == "SECTION" {
@@ -41,20 +40,67 @@ fn build_section_map<'a>(elem: &'a Element, map: &mut HashMap<String, &'a Elemen
     }
 }
 
+// We will create a list of sections here each containing a parents array.
+pub fn flatten_structure(structure: Value) -> Vec<Value> {
+    // This will hold the flattened structures
+    let mut sections = Vec::new();
+
+    // Recursively flatten the JSON structure
+    walk_structure_sections(&structure, &Vec::new(), &mut sections);
+
+    return sections;
+}
+
+/* 
+*  	Recursively walk `structure`. If there's a "children" field:
+*  		- Remove it from the current node (so we don't duplicate it later).
+*  		- Recursively flatten each child, accumulating parents along the way.
+* 	Otherwise, if there's no "children" field:
+*  		- It's a leaf node, so we insert the accumulated `parents` and push it into the `sections` vector.	
+*/ 
+fn walk_structure_sections(structure: &Value, parents: &Vec<Value>, sections: &mut Vec<Value>) {
+    if let Some(children) = structure.get("children") {
+        // If `children` is present and is an array
+        if let Some(children_array) = children.as_array() {
+            // Clone the current object so we can strip out the "children"
+            if let Some(obj) = structure.as_object() {
+                let mut parent_obj = obj.clone();
+                parent_obj.remove("children");
+
+                // Convert our "parent_obj" back to a Value
+                let parent_value = Value::Object(parent_obj);
+
+                // Append that parent to the list of parents
+                let mut new_parents = parents.clone();
+                new_parents.push(parent_value);
+
+                // Recurse for each child
+                for child in children_array {
+                    walk_structure_sections(child, &new_parents, sections);
+                }
+            }
+        }
+    } else {
+        // No "children" => This is a leaf node
+        if let Some(obj) = structure.as_object() {
+            let mut leaf_obj = obj.clone();
+            // Insert the "parents" array
+            leaf_obj.insert("parents".to_string(), Value::Array(parents.clone()));
+            sections.push(Value::Object(leaf_obj));
+        }
+    }
+}
+
 fn xml_element_to_string(element: &Element) -> String {
     let mut section_string = Vec::new();
     element.write(&mut section_string).unwrap();
     String::from_utf8(section_string).unwrap()
 }
 
-fn section_corrections(section_string: &str) -> String {
-    section_string.replace("<HEAD>", "<h5>").replace("</HEAD>", "</h5>")
-}
-
 /*
  * Get the path of the section from the array of parents in the structure JSON
  */
-fn get_section_path(parents: &Vec<Value>) -> String {
+ fn get_section_path(parents: &Vec<Value>) -> String {
     parents
         .iter()
         .map(|parent| {
@@ -82,8 +128,8 @@ fn main() -> Result<()> {
         })?
         .collect();
 
-    let title_file_directory = "./storage/app/private/ecfr/current/xml";
-    let markdown_directory = "./storage/app/private/ecfr/current/markdown";
+    let title_file_directory = "./storage/app/private/ecfr/current/documents/xml";
+    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown";
 
     // Parallel loop. FAST (may be too much for production)
     title_results.into_par_iter().for_each(|title_result| {
@@ -116,8 +162,7 @@ fn main() -> Result<()> {
 
                 if let Some(section_element) = section_map.get(identifier) {
                     let section_string = xml_element_to_string(section_element);
-
-                    let corrected_string = section_corrections(&section_string);
+                    let corrected_string = section_string.replace("<HEAD>", "<h5>").replace("</HEAD>", "</h5>");
                     let section_markdown = parse_html(&corrected_string);
 
                     // Write file
@@ -152,3 +197,4 @@ fn main() -> Result<()> {
 
     Ok(())
 }
+

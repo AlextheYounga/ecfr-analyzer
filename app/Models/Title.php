@@ -18,6 +18,7 @@ class Title extends Model
 		'latest_issue_date',
 		'up_to_date_as_of',
 		'reserved',
+		'structure'
     ];
 
 	/**
@@ -31,15 +32,12 @@ class Title extends Model
             'latest_amended_on' => 'date',
             'latest_issue_date' => 'date',
 			'up_to_date_as_of' => 'date',
+			'structure' => 'json'
         ];
     }
 
 	public function versions() {
 		return $this->hasMany(Version::class);
-	}
-
-	public function structures() {
-		return $this->hasMany(Structure::class);
 	}
 
 	public function latestVersion()

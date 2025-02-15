@@ -60,4 +60,13 @@ class ECFRService
 			return false;
 		}
 	}
+
+	public function fetchAgencies() {
+		$apiUrl = $this->apiRoot . 'admin/v1/agencies.json';
+		$response = Http::timeout(60)->get($apiUrl);
+		if ($response->failed()) {
+			throw new \Exception("Failed to fetch document");
+		}
+		return \json_decode($response->body(), true);
+	}
 }

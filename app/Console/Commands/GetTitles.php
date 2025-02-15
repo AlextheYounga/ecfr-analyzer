@@ -31,6 +31,7 @@ class GetTitles extends Command
 
 		// Download Titles
 		$titles = $ecfr->fetchTitles();
+		
 		foreach($titles['titles'] as $title) {
 			Title::updateOrCreate(
 				['number' => $title['number']],

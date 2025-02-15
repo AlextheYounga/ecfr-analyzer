@@ -19,6 +19,7 @@ return new class extends Migration
 			$table->date('latest_issue_date')->nullable();
 			$table->date('up_to_date_as_of')->nullable();
 			$table->boolean('reserved')->default(false);
+			$table->json('structure')->nullable();
             $table->timestamps();
         });
     }

@@ -6,8 +6,7 @@ use Illuminate\Console\Command;
 use App\Services\ECFRService;	
 use App\Models\Title;
 use Illuminate\Support\Facades\Log;
-use ZipArchive;
-
+use Illuminate\Support\Facades\Storage;
 class GetLatestTitleDocuments extends Command
 {
     /**
@@ -15,7 +14,7 @@ class GetLatestTitleDocuments extends Command
      *
      * @var string
      */
-    protected $signature = 'ecfr:latest-documents';
+    protected $signature = 'ecfr:current';
 
     /**
      * The console command description.
@@ -41,13 +40,12 @@ class GetLatestTitleDocuments extends Command
 				continue;
 			}
 
-			$filename = 'documents/latest/title-' . $title->number . '.json';
+			$filename = 'ecfr/current/title-' . $title->number . '.xml';
 
 			// Fetch from API
 			$xml = $ecfr->fetchDocument($title->number, $versionDate);
 			if ($xml) {
-				$jsonXml = json_encode(simplexml_load_string($xml));
-				$this->zipFile($filename, $jsonXml);
+				Storage::disk('local')->put($filename, $xml);
 				$this->info("Downloaded title " . $title['number'] . ' on date ' . $versionDate);
 			} else {
 				Log::error($filename);
@@ -64,19 +62,6 @@ class GetLatestTitleDocuments extends Command
 			return $title->latest_amended_on->format('Y-m-d');
 		} else {
 			return null;
-		}
-	}
-
-	private function zipFile($filename, $data) {
-		$zipFilename = $filename . '.zip';
-		$zip = new ZipArchive; // Create a zip archive directly in memory or to a file
-		$zipPath = storage_path("app/private/{$zipFilename}");
-
-		if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-			// Add the JSON data as a file in the zip
-			$zip->addFromString(basename($filename), $data);
-			// Close the zip archive
-			$zip->close();
 		}
 	}
 }

@@ -2,7 +2,7 @@
 
 **Project Notes: eCFR Analyzer**
 
-See the [Developer Notes](./docs/dev-notes.md) for information on getting started.
+See the [Developer Notes](./docs/dev-notes.md) for information on **Getting Started**.
 
 ## **Current Status** ##
 - [x] Frontend with dashboard layout
@@ -20,6 +20,8 @@ See the [Developer Notes](./docs/dev-notes.md) for information on getting starte
 - [ ] Frequency of ammendments chart
 - [ ] Pie chart of words per title 
 - [ ] Pie chart of words per agency
+
+![Dashboard](./docs/images/dashboard.png)
 
 I now have all the foundations in place to finish this project as well as explore many more options with this data. 
 
@@ -48,15 +50,7 @@ I think this is a much better approach to simply relying on the eCFR API. Owning
 - **Rust executables for parsing title documents**. A /rust folder in my repo contains all document parsing scripts. The performance benefits of Rust are enormous here, especially with its true parallelism. 
 
 
-#### **Database Tables** ####
-- Agencies
-- AgencyTitle
-- Titles
-- TitleStructure
-- Versions *deprecated for now*
-
-
-My initial plan was to approach this in a similar fashion as my other project where I converted the entire US Federal Code into Markdown and then uploaded it to Github. I would prefer to have the entire 
+My initial plan was to approach this in a similar fashion as my other project where I converted the entire US Federal Code into Markdown and then uploaded it to Github. 
 
 1. **Download the entire eCFR including historical versions and track them with Git**
    - Store all data in a Git repository within the project as a coherent history of commits that could be easily queried in PHP using the [gitonomy](https://github.com/gitonomy/gitlib) package.

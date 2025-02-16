@@ -3,17 +3,18 @@
 namespace App\Http\Controllers;
 
 // use Illuminate\Http\Request;
+// use Gitonomy\Git\Repository;
 use Inertia\Inertia;
-use Gitonomy\Git\Repository;
+use App\Models\Title;
+
 
 class PageController extends Controller
 {
     public function welcome() {
-
-		$repository = new Repository(\storage_path('app/usc/.git'));
-		dd($repository->getLog()->getCommits());
 		return Inertia::render('Welcome', [
-			'commits' => $repository->getLog()->getCommits(),
-		]);
+				'titles' => Title::orderBy('word_count', 'desc')->get(),
+				'totalWords' => Title::sum('word_count')
+			]
+		);
 	}
 }

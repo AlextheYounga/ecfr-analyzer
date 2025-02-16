@@ -18,10 +18,10 @@ See the [Developer Notes](./docs/dev-notes.md) for information on **Getting Star
 - [x] Word count per title list
 - [ ] Word count of titles per agency list *(almost finished)*
 - [ ] Frequency of ammendments chart
-- [ ] Pie chart of words per title 
+- [x] Pie chart of words per title 
 - [ ] Pie chart of words per agency
 
-![Dashboard](./docs/images/dashboard.png)
+![Dashboard](./docs/images/dashboard-2.png)
 
 I now have all the foundations in place to finish this project as well as explore many more options with this data. 
 

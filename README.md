@@ -67,6 +67,7 @@ My initial plan was to approach this in a similar fashion as my other project wh
 	- I juggled many possible storage solutions, but ultimately settled for simplicity. SQLite worked fine for storing simple app data, and I could always store references to files in local storage in my SQLite db and then fetch those files.  
 
 ### **Challenges Encountered**
+![API Failures](./docs/images/api-failures.png)
 - **Working with the eCFR API**
   - The API has aspects I appreciate, but also several pain points which became a massive time suck. 
   - **The API frequently times out**, with many requests taking over a minute. This behavior may indicate a server rate limit, but it must be enforced globally, because it was not alleviated when I switched to VPNs. 

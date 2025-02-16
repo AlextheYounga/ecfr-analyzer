@@ -5,30 +5,32 @@
 			<!-- Top Bar / Header -->
 			<header class="flex items-center justify-between bg-white shadow px-6 py-4">
 				<div>
-					<h1 class="text-2xl font-bold">Dashboard</h1>
+					<h1 class="text-2xl font-bold">eCFR Analysis Dashboard</h1>
 				</div>
 			</header>
 
 			<!-- Dashboard Content -->
 			<main class="p-6 overflow-auto">
 				<!-- Stats Cards Row -->
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+				<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
 					<div class="bg-white shadow rounded-lg p-6 flex items-center justify-between">
 						<div>
 							<p class="text-sm text-gray-500">Total Words</p>
 							<p class="text-2xl font-bold">{{ totalWords }}</p>
 						</div>
-						<div class="bg-blue-100 text-blue-500 p-3 rounded-full">
-							<!-- Icon placeholder -->
-							<svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M9 16h6" />
-							</svg>
-						</div>
+					</div>
+				</div>
+
+				<!-- Word Count By Agency -->
+				<div class="bg-white shadow rounded-lg p-6">
+					<h2 class="text-lg font-semibold mb-4">Word Count By Title</h2>
+					<div id="pie-chart" class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
+						<span class="text-gray-400">Chart Placeholder</span>
 					</div>
 				</div>
 
 				<!-- Charts Grid -->
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="grid grid-cols-2 md:grid-cols-2 gap-6 pt-6">
 					<!-- Word Count by Title (with scrollable list) -->
 					<div class="bg-white shadow rounded-lg p-6">
 						<h2 class="text-lg font-semibold mb-4">Word Count by Title</h2>
@@ -46,12 +48,20 @@
 					<!-- Word Count By Agency -->
 					<div class="bg-white shadow rounded-lg p-6">
 						<h2 class="text-lg font-semibold mb-4">Word Count By Agency</h2>
-						<div class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
-							<span class="text-gray-400">Chart Placeholder</span>
+						<div id="pie-chart" class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
+							<span class="text-gray-400">Coming Soon</span>
 						</div>
 					</div>
 
 					<!-- Frequency of Amendments -->
+					<!-- <div class="bg-white shadow rounded-lg p-6">
+						<h2 class="text-lg font-semibold mb-4">Frequency of Amendments</h2>
+						<div class="bg-gray-100 rounded h-80 flex items-center justify-center">
+							<span class="text-gray-400">Chart Placeholder</span>
+						</div>
+					</div> -->
+
+					<!-- Agencies -->
 					<!-- <div class="bg-white shadow rounded-lg p-6">
 						<h2 class="text-lg font-semibold mb-4">Frequency of Amendments</h2>
 						<div class="bg-gray-100 rounded h-80 flex items-center justify-center">
@@ -65,19 +75,66 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { defineProps } from 'vue';
+import { defineProps, onMounted } from 'vue';
+import * as echarts from 'echarts';
 
 const props = defineProps({
 	titles: Array,
-	totalWords: Number
+	totalWords: Number,
+	agencies: Array
 });
 
+function calculateWordsByTitle() {
+	let data = [];
 
-// A simple ref to toggle the user menu
-const showUserMenu = ref(false);
-
-function toggleUserMenu() {
-	showUserMenu.value = !showUserMenu.value;
+	for (const title of props.titles) {
+		const wordPercent = (title.word_count / props.totalWords * 100).toFixed(2);
+		console.log(title.name, wordPercent);
+		data.push({
+			value: wordPercent,
+			name: title.name
+		});
+	}
+	return data;
 }
+
+// ECharts Pie Chart
+onMounted(() => {
+	const data = calculateWordsByTitle();
+	var chartDom = document.getElementById('pie-chart');
+	var myChart = echarts.init(chartDom);
+	var option;
+
+	option = {
+		// legend: {
+		// 	top: 'bottom'
+		// },
+		toolbox: {
+			show: true,
+			feature: {
+				mark: { show: true },
+				dataView: { show: true, readOnly: false },
+				restore: { show: true },
+				saveAsImage: { show: true }
+			}
+		},
+		series: [
+			{
+				name: 'Word Count By Title',
+				type: 'pie',
+				radius: [50, 250],
+				center: ['50%', '50%'],
+				roseType: 'area',
+				itemStyle: {
+					borderRadius: 8
+				},
+				data: data
+			}
+		]
+	};
+
+	option && myChart.setOption(option);
+})
+
+
 </script>

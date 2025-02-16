@@ -45,6 +45,8 @@ class GetAgencies extends Command
     }
 
 	private function saveAgency($agency, $parent_id = 0) {
+
+		$agencyTitles = $agency['cfr_references'];
 		return Agency::updateOrCreate([
 			'slug' => $agency['slug'],
 		],
@@ -54,8 +56,16 @@ class GetAgencies extends Command
 			'short_name' => $agency['short_name'],
 			'display_name' => $agency['display_name'],
 			'sortable_name' => $agency['sortable_name'],
-			'cfr_references' => $agency['cfr_references'],
+			'cfr_references' => $agencyTitles,
 		]);
+
+		foreach($agencyTitles as $title) {
+			$titleRecord = Title::where('number', $title['number'])->first();
+			if ($titleRecord) {
+				$agencyRecord->titles()->attach($titleRecord->id);
+			}
+
+		}
 	}
 
 	private function saveChildren($children, $parent_id) {

@@ -33,6 +33,7 @@ class GetTitles extends Command
 		$titles = $ecfr->fetchTitles();
 		
 		foreach($titles['titles'] as $title) {
+			$structureFilePath = 'ecfr/current/structure/title-' . $title['number'] . '-structure.json';
 			Title::updateOrCreate(
 				['number' => $title['number']],
 				[
@@ -41,6 +42,7 @@ class GetTitles extends Command
 					'latest_issue_date' => $title['latest_issue_date'],
 					'up_to_date_as_of' => $title['up_to_date_as_of'],
 					'reserved' => $title['reserved'],
+					'structure_reference' => storage_path('app/private/'. $structureFilePath)
 				]
 			);	
 		}	

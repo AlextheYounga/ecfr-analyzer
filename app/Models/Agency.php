@@ -42,4 +42,9 @@ class Agency extends Model
 	public function children() {
 		return $this->hasMany(Agency::class, 'parent_id');
 	}
+
+    public function titles()
+    {
+        return $this->belongsToMany(Title::class);
+    }
 }

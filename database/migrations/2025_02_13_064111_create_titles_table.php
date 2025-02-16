@@ -22,6 +22,8 @@ return new class extends Migration
 			$table->string('structure_reference')
 				->comment('Path to structure json file')
 				->nullable();
+			$table->integer('word_count')->nullable();	
+			$table->json('properties')->nullable();
             $table->timestamps();
         });
     }

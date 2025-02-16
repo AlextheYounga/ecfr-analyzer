@@ -11,17 +11,16 @@ See the [Developer Notes](./docs/dev-notes.md) for information on **Getting Star
   - [x] Titles
   - [x] Versions,
   - [x] Structures
-  - [x] All previous document histories *(API often times out)*
+  - [x] All previous document histories *(API often times out, data incomplete)*
 - [x] Title conversion into Markdown (800mb of titles converted in about 15 seconds)
-- [x] Title conversion from Markdown into plaintext text
-- [x] Total words
+- [x] Title conversion from Markdown into plaintext
 - [x] Word count per title list
 - [ ] Word count of titles per agency list *(almost finished)*
-- [ ] Frequency of ammendments chart
 - [x] Pie chart of words per title 
 - [ ] Pie chart of words per agency
 - [ ] Querying into each title
 - [ ] Querying into past history of titles
+- [ ] Frequency of ammendments chart
 
 ![Dashboard](./docs/images/dashboard-2.png)
 

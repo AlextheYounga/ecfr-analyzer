@@ -105,14 +105,17 @@ fn xml_element_to_string(element: &Element) -> String {
         .iter()
         .map(|parent| {
             let parent_obj = parent.as_object().unwrap();
-            let parent_label = parent_obj.get("label_level").unwrap().as_str().unwrap().trim();
-            parent_label.to_lowercase().replace(' ', "-")
+			// Manually build parent label because of bad data entry in gov db.
+			let parent_type = parent_obj.get("type").unwrap().as_str().unwrap().trim();
+			let parent_id = parent_obj.get("identifier").unwrap().as_str().unwrap().trim();
+			let parent_label = parent_type.to_lowercase().replace(' ', "-") + "-" + &parent_id.to_lowercase().replace(' ', "-");
+            parent_label
         })
         .collect::<Vec<String>>()
         .join("/")
 }
 
-fn main() -> Result<()> {
+pub fn run() -> Result<()> {
     let db = db_connection()?;
     let mut stmt = db.prepare(
         "SELECT number, structure_reference FROM titles WHERE reserved = false"
@@ -129,7 +132,7 @@ fn main() -> Result<()> {
         .collect();
 
     let title_file_directory = "./storage/app/private/ecfr/current/documents/xml";
-    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown";
+    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown/nested";
 
     // Parallel loop. FAST (may be too much for production)
     title_results.into_par_iter().for_each(|title_result| {

@@ -1,5 +1,5 @@
 [package]
-name = "parser"
+name = "title_markdown_parser"
 version = "0.1.0"
 edition = "2021"
 

@@ -20,6 +20,8 @@ See the [Developer Notes](./docs/dev-notes.md) for information on **Getting Star
 - [ ] Frequency of ammendments chart
 - [x] Pie chart of words per title 
 - [ ] Pie chart of words per agency
+- [ ] Querying into each title
+- [ ] Querying into past history of titles
 
 ![Dashboard](./docs/images/dashboard-2.png)
 

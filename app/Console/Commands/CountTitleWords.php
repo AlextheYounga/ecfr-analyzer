@@ -31,6 +31,8 @@ class CountTitleWords extends Command
 		$titles = Title::all();
 		$parser = new Parsedown();
 
+		$this->runRustParser();
+
 		foreach($titles as $title) {
 			$markdownTitle = 'ecfr/current/documents/markdown/full/title-' . $title->number . '.md';
 			$markdownContent = Storage::disk('local')->get($markdownTitle);
@@ -44,6 +46,16 @@ class CountTitleWords extends Command
 
 			$title->word_count = $wordCount;
 			$title->save();
+
+			$entities = $title->entities()->get();
+			foreach($entities as $entity) {
+				if (empty($entity->content)) {
+					continue;
+				}
+				$wordCount = $this->countWords($entity->content);
+				$entity->word_count = $wordCount;
+				$entity->save();
+			}
 		
 		}
     }
@@ -52,5 +64,21 @@ class CountTitleWords extends Command
 		// Word Count
 		$words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
 		return count($words);
+	}
+
+	/**
+     * Run Rust parser command to convert title XML to Markdown
+	 * This will almost certainly become unnecessary. 
+     */
+	private function runRustParser() {
+		$this->info('Parsing title XML documents and converting to Markdown');
+
+		// Check that the Rust script has been compiled
+		if (!file_exists(base_path('rust/target/release/title_markdown_parser'))) {
+			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
+		}
+
+		// Run the Rust script with argument
+		shell_exec(base_path('rust/target/release/title_markdown_parser flat'));
 	}
 }

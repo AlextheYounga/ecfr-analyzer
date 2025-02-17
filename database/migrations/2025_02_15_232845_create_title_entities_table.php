@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('title_structure', function (Blueprint $table) {
+        Schema::create('title_entities', function (Blueprint $table) {
             $table->id();
 			$table->foreignId('title_id')->constrained()->onDelete('cascade');
-			$table->foreignId('parent_id')->nullable()->constrained('title_structure');
-			$table->integer('level');
-			$table->integer('order_index');
-			$table->string('identifier')->unique();
+			$table->foreignId('parent_id');
+			$table->integer('level')->index();
+			$table->integer('order_index')->index();
+			$table->string('type')->index();
+			$table->string('identifier')->nullable();
 			$table->string('label')->nullable();
 			$table->string('label_level')->nullable();
 			$table->string('label_description')->nullable();
 			$table->boolean('reserved')->nullable();
-			$table->string('type')->nullable();
 			$table->integer('size')->nullable();
-			$table->longText('content')->nullable();
 			$table->json('properties')->nullable();
             $table->timestamps();
         });
@@ -35,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('title_structure');
+        Schema::dropIfExists('title_entities');
     }
 };

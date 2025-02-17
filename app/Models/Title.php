@@ -38,23 +38,12 @@ class Title extends Model
         ];
     }
 
-	/**
-     * Get the title structure from the JSON file
-     *
-     * @return array<string, string>
-     */
-	public function getStructure()
-    {
-		$fileReference = $this->structure_reference;
-		if (empty($fileReference)) {
-			return [];
-		}
-		$structure = file_get_contents($fileReference);
-		return json_decode($structure, true);
-    }
-
 	public function agencies()
     {
         return $this->belongsToMany(Agency::class);
     }
+
+	public function entities() {
+		return $this->hasMany(TitleEntity::class);
+	}
 }

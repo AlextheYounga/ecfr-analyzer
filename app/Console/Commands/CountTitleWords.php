@@ -28,57 +28,43 @@ class CountTitleWords extends Command
      */
     public function handle()
     {
-		$titles = Title::all();
-		$parser = new Parsedown();
-
-		$this->runRustParser();
-
-		foreach($titles as $title) {
-			$markdownTitle = 'ecfr/current/documents/markdown/full/title-' . $title->number . '.md';
-			$markdownContent = Storage::disk('local')->get($markdownTitle);
-			//Convert Markdown to HTML
-			$html = $parser->text($markdownContent);
-			// Strip HTML tags to get plain text
-			$plaintext = strip_tags($html);
-			$wordCount = $this->countWords($plaintext);
-
-			$this->info($wordCount . ' words' . ' | ' . 'Title ' . $title->number . ' - ' . $title->name);
-
-			$title->word_count = $wordCount;
-			$title->save();
-
-			$entities = $title->entities()->get();
-			foreach($entities as $entity) {
-				if (empty($entity->content)) {
-					continue;
-				}
-				$wordCount = $this->countWords($entity->content);
-				$entity->word_count = $wordCount;
-				$entity->save();
-			}
-		
-		}
+		$this->runRustWordCounter();
     }
 
-	private function countWords($text) {
-		// Word Count
-		$words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-		return count($words);
-	}
 
 	/**
      * Run Rust parser command to convert title XML to Markdown
 	 * This will almost certainly become unnecessary. 
      */
 	private function runRustParser() {
-		$this->info('Parsing title XML documents and converting to Markdown');
+		$this->info('Parsing title XML documents and converting to Markdown...');
 
 		// Check that the Rust script has been compiled
 		if (!file_exists(base_path('rust/target/release/title_markdown_parser'))) {
 			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
 		}
 
+		if (file_exists(storage_path('app/private/ecfr/current/documents/markdown/flat'))) {
+			$this->info('Already parsed, skipping');
+			return;
+		}	
+
 		// Run the Rust script with argument
 		shell_exec(base_path('rust/target/release/title_markdown_parser flat'));
+	}
+
+	/**
+     * Run Rust word counter
+     */
+	private function runRustWordCounter() {
+		$this->info('Counting words...');
+
+		// Check that the Rust script has been compiled
+		if (!file_exists(base_path('rust/target/release/word_counter'))) {
+			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
+		}
+
+		// Run the Rust script with argument
+		shell_exec(base_path('rust/target/release/word_counter'));
 	}
 }

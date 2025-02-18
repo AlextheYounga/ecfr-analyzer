@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Title;
+use App\Models\TitleContent;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class GetTitleContent extends Command
@@ -27,27 +29,45 @@ class GetTitleContent extends Command
      */
     public function handle()
     {
+		TitleContent::truncate();
 		$this->runRustParser();
 	
-
 		$titles = Title::all();
 		foreach ($titles as $title) {
+			$contentMap = [];
 			$this->info('Parsing title sections for ' . $title->number);
 			$titleEntities = $title->entities()->where('type', 'section')->get();
-
+			$titleWords = 0;
 			foreach ($titleEntities as $titleEntity) {
 				$titleEntityId = $titleEntity->identifier;
 				$filePath = 'ecfr/current/documents/markdown/flat/title-' . $title->number . '/' . $titleEntityId . '.md';
 				$markdown = Storage::disk('local')->get($filePath);
+				$wordCount = $this->countWords($markdown);
+				$titleWords += $wordCount;
 
-				$titleEntity->content()->firstOrNew([
+				$contentRecord = [
 					'title_id' => $title->id,
 					'entity_id' => $titleEntity->id,
 					'content' => $markdown,
-				]);
-
+					'word_count' => $wordCount,
+					'created_at' => now(),
+					'updated_at' => now(),
+				];
+				array_push($contentMap, $contentRecord);
 			}
+
+			$chunks = array_chunk($contentMap, 1000);
+			foreach ($chunks as $chunk) {
+				DB::table('title_content')->insert($chunk);
+			}
+
+			$title->word_count = $titleWords;
+			$title->save();
 		}
+
+		// Clean up
+		$this->info('Cleaning up temporary files');
+		shell_exec('rm -rf ' . storage_path('app/private/ecfr/current/documents/markdown/flat'));
     }
 
 	/**
@@ -62,7 +82,18 @@ class GetTitleContent extends Command
 			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
 		}
 
+		if (file_exists(storage_path('app/private/ecfr/current/documents/markdown/flat'))) {
+			$this->info('Already parsed, skipping');
+			return;
+		}	
+
 		// Run the Rust script with argument
 		shell_exec(base_path('rust/target/release/title_markdown_parser flat'));
+	}
+
+	private function countWords($text) {
+		// Word Count
+		$words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+		return count($words);
 	}
 }

@@ -23,7 +23,6 @@ nvm install # optional, if you're using nvm
 npm install
 ```
 
-
 **Copy environment file and generate key**
 `cp .env.example .env`
 
@@ -34,13 +33,7 @@ php artisan key:generate
 php artisan migrate
 ```
 
-**Download Data**
-```sh
-php artisan ecfr:titles
-php artisan ecfr:agencies
-php artisan ecfr:structures
-php artisan ecfr:documents
-```
+Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/Q7PE08B3M4#Frd16STAW4cu)
 
 **Compile Rust scripts**
 ```sh
@@ -49,19 +42,20 @@ cd rust
 cargo build --release
 ```
 
-**Run Scripts**
-Support both fully nested, flat, and full document storage structures:
-  - *Nested:* `title-1/chapter/subchapter/part/section.md`
-  - *Flat:* `title-1/section_id.md`
-  - *Full* `title-1.md`
+**Download Data**
+You can either do it yourself:
 
-Run Rust Script. Options: [nested, flat, full]
+```sh
+  ecfr:titles               Download eCFR titles from API
+  ecfr:entities             Download eCFR structures from API and convert them to "title entities"
+  ecfr:agencies             Download eCFR agencies from API
+  ecfr:documents            Fetch latest title documents from ECFR
+  ecfr:content              Parse the title documents and save the Markdown content to the database
+  ecfr:agency-titles        Save agency title entity relations to the database
+  ecfr:agency-words         Calculate the word count for each agency
+```
 
-`./rust/target/release/title_markdown_parser [option]`
-
-**Run Word Analyzer**
-> IMPORTANT: Must have previously run the rust script with the **full** option at least once
-`php artisan ecfr:words`
+Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/Q7PE08B3M4#Frd16STAW4cu)
 
 **Start up Frontend**
 `npm run dev` Start the node server

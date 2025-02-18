@@ -23,7 +23,7 @@ class GetTitleEntities extends Command
      *
      * @var string
      */
-    protected $description = 'Download eCFR structures from API';
+    protected $description = 'Download eCFR structures from API and convert them to "title entities"';
 
 	/**
      * A hash map to store the structure records

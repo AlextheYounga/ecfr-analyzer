@@ -13,14 +13,18 @@ use App\Models\Title;
 class DashboardController extends Controller
 {
     public function welcome() {
+		$agencies = Agency::where('word_count', '>', 0)	
+			->orderBy('word_count', 'desc')
+			->get();
+
+		$titles = Title::where('reserved', false)
+			->orderBy('word_count', 'desc')
+			->get();
+
 		return Inertia::render('Welcome', [
 				'agencyCount' => Agency::count(),
-				'agencies' => Agency::where('word_count', '>', 0)	
-					->orderBy('word_count', 'desc')
-					->get(),
-				'titles' => Title::where('reserved', false)
-					->orderBy('word_count', 'desc')
-					->get(),
+				'agencies' => $agencies,
+				'titles' => $titles,
 				'totalWords' => Title::sum('word_count'),
 			]
 		);

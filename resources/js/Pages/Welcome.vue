@@ -1,4 +1,5 @@
 <template>
+
 	<Head title="Dashboard" />
 
 	<div class="flex h-screen bg-gray-100 text-gray-800">
@@ -23,7 +24,7 @@
 				</div>
 
 				<!-- Charts Grid -->
-				<div class="grid grid-cols-2 md:grid-cols-2 gap-6 pt-6">
+				<div class="grid lg:grid-cols-2 md:grid-cols-2 gap-6 pt-6">
 					<!-- Word Count by Title (with scrollable list) -->
 					<div class="bg-white shadow rounded-lg p-6">
 						<h2 class="text-lg font-semibold mb-4">Word Count by Title</h2>
@@ -52,7 +53,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="grid grid-cols-2 md:grid-cols-2 gap-6 pt-6">
+				<div class="grid lg:grid-cols-2 md:grid-cols-2 gap-6 pt-6">
 					<div class="bg-white shadow rounded-lg p-6">
 						<h2 class="text-lg font-semibold mb-4">Word Count By Agency</h2>
 						<h3 class="text-md mb-4">Total Agencies <i>(that we know of)</i>: <b>{{ agencyCount }}</b></h3>
@@ -62,9 +63,10 @@
 					</div>
 					<!-- Frequency of Amendments -->
 					<div class="bg-white shadow rounded-lg p-6">
-						<h2 class="text-lg font-semibold mb-4">Frequency of Amendments</h2>
-						<div class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
-							<span class="text-gray-400">Coming Soon</span>
+						<h2 class="text-lg font-semibold mb-4">Number of Amendments</h2>
+						<h3 class="text-md mb-4">Total Amendments since 2013 by Title</h3>
+						<div id="amendments-bar-chart" class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
+							<span class="text-gray-400">Chart Placeholder</span>
 						</div>
 					</div>
 				</div>
@@ -114,6 +116,18 @@ function calculateWordsByAgency() {
 		data.push({
 			value: wordPercent,
 			name: agency.name
+		});
+	}
+	return data;
+}
+
+function calculateAmendmentsByTitle() {
+	let data = [];
+
+	for (const title of props.titles) {
+		data.push({
+			value: title.properties.amendments,
+			name: title.name
 		});
 	}
 	return data;
@@ -185,13 +199,45 @@ function agencyPieChart() {
 	};
 
 	option && myChart.setOption(option);
+}
 
+function amendmentsBarChart() {
+	const data = calculateAmendmentsByTitle();
+	const names = data.map(item => item.name);
+	const values = data.map(item => item.value);
+	const maxVal = Math.max(...values) * 1.1;
+	var chartDom = document.getElementById('amendments-bar-chart');
+	var myChart = echarts.init(chartDom);
+
+	var option = {
+		polar: {
+			radius: [30, '80%']
+		},
+		radiusAxis: {
+			max: maxVal,
+		},
+		angleAxis: {
+			type: 'category',
+			data: names,
+			startAngle: 75
+		},
+		tooltip: {},
+		series: {
+			type: 'bar',
+			data: values,
+			coordinateSystem: 'polar',
+		},
+		animation: false
+	};
+
+	option && myChart.setOption(option);
 }
 
 // ECharts Pie Chart
 onMounted(() => {
 	titlePieChart();
 	agencyPieChart();
+	amendmentsBarChart();
 });
 
 

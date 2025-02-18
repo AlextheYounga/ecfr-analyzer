@@ -46,4 +46,9 @@ class Title extends Model
 	public function entities() {
 		return $this->hasMany(TitleEntity::class);
 	}
+
+	public function versions() {
+		return $this->hasMany(Version::class);
+	}
+
 }

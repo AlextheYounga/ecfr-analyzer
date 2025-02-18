@@ -17,7 +17,7 @@
 				<div class="bg-white shadow rounded-lg p-6">
 					<h2 class="text-lg font-semibold mb-4">Word Count By Title</h2>
 					<h3 class="text-md mb-4">Total Meaningful Words: <b>{{ totalWords.toLocaleString() }}</b></h3>
-					<div id="title-pie-chart" class="bg-gray-100 rounded flex items-center justify-center" style="height: 60vh;">
+					<div id="title-pie-chart" class="bg-gray-100 rounded flex items-center justify-center" style="height: 80vh;">
 						<span class="text-gray-400">Chart Placeholder</span>
 					</div>
 				</div>

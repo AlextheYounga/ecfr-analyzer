@@ -38,8 +38,12 @@ class GetTitleEntities extends Command
         $ecfr = new ECFRService();
 		$titles = Title::all();
 		TitleEntity::truncate();
-	
+		
 		foreach($titles as $title) {
+			if ($title->structure_reference && file_exists($title->structure_reference)) {
+				$this->info("Title " . $title->number . " already has a structure reference, skipping");
+				continue;
+			}
 			$this->info("Saving title structure for Title " . $title->number);
 
 			if ($title['reserved']) {
@@ -60,53 +64,16 @@ class GetTitleEntities extends Command
 				continue;
 			}
 
-			// Save the structure to a file and add file reference to Title table
+			// Save the structure to a file
 			$filepath = 'ecfr/current/structure/title-' . $titleNumber . '-structure.json';
 			Storage::disk('local')->put($filepath, json_encode($structure));	
+
+			// Add file reference to Title table
 			$title->structure_reference = storage_path('app/private/'. $filepath);	
 			$title->save();	
-
-			// Save title structure with children
-			$this->mapEntities($title->id, $structure, 0, 0, 0);
 			sleep(1);
 		}	
 
-		$this->massInsert();
+		$this->call('db:seed', ['--class' => 'TitleEntitySeeder']);
     }
-
-	private function mapEntities($titleId, $structure, $parentId, $level, $orderIndex) {
-		$record = [
-			'id' => count($this->hashMap) == 0 ? 1 : count($this->hashMap) + 1,
-			'title_id' => $titleId,
-			'parent_id' => $parentId,
-			'level' => $level,
-			'order_index' => $orderIndex,
-			'identifier' => isset($structure['identifier']) ? trim($structure['identifier']) : null,
-			'label' => isset($structure['label']) ? trim($structure['label']) : null,
-			'label_level' => isset($structure['label_level']) ? trim($structure['label_level']) : null,
-			'label_description' => isset($structure['label_description']) ? trim($structure['label_description']) : null,
-			'reserved' => $structure['reserved']?? false,
-			'type' => $structure['type'],
-			'size' => $structure['size'] ?? null,
-		];
-
-		array_push($this->hashMap, $record);
-
-		if (isset($structure['children'])) {
-			foreach($structure['children'] as $index => $child) {
-				$this->mapEntities($titleId, $child, $record['id'], $level + 1, $index);
-			}
-		}
-	}
-
-	private function massInsert() {
-		echo "Inserting " . count($this->hashMap) . " records...\n";
-		$chunks = array_chunk($this->hashMap, 1000);	
-		$inserted = 0;
-		foreach ($chunks as $chunk) {
-			DB::table('title_entities')->insert($chunk);
-			$inserted += count($chunk);
-			echo "Inserted $inserted records\n";
-		}
-	}
 }

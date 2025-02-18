@@ -33,7 +33,7 @@ php artisan key:generate
 php artisan migrate
 ```
 
-Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/Q7PE08B3M4#Frd16STAW4cu)
+Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/V1C9H1TBK4#aWpNbp6tUaqe)
 
 **Compile Rust scripts**
 ```sh
@@ -41,9 +41,12 @@ cd rust
 # Build Rust executables
 cargo build --release
 ```
-
 **Download Data**
 You can either do it yourself:
+
+Run all commands in order (*takes approximately 3 minutes*): `php artisan ecfr:all`
+
+All commands:
 
 ```sh
   ecfr:titles               Download eCFR titles from API
@@ -55,7 +58,7 @@ You can either do it yourself:
   ecfr:agency-words         Calculate the word count for each agency
 ```
 
-Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/Q7PE08B3M4#Frd16STAW4cu)
+Or just steal my DB: [Proton Drive Link](https://drive.proton.me/urls/V1C9H1TBK4#aWpNbp6tUaqe)
 
 **Start up Frontend**
 `npm run dev` Start the node server

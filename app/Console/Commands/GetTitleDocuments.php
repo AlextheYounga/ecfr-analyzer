@@ -30,19 +30,28 @@ class GetTitleDocuments extends Command
      */
     public function handle()
     {
-        $this->call('ecfr:titles');	
-
 		$ecfr = new ECFRService();
         $titles = Title::all();
 
+		if (!$titles) {
+			throw new \Exception("No titles found. Run php artisan ecfr:titles");	
+		}
+
+		// Ensure directory exists
+		Storage::disk('local')->makeDirectory('ecfr/current/documents/xml');
+
 		foreach ($titles as $title) {
+			$filename = 'ecfr/current/documents/xml/title-' . $title->number . '.xml';
+			if (Storage::disk('local')->exists($filename)) {
+				$this->info("Title " . $title['number'] . " already downloaded, skipping");
+				continue;
+			}	
+
 			$versionDate = $this->getVersionDate($title);
 			if (!$versionDate) {
 				$this->warn("No version date found for title " . $title['number']);
 				continue;
 			}
-
-			$filename = 'ecfr/current/documents/xml/title-' . $title->number . '.xml';
 
 			// Fetch from API
 			$xml = $ecfr->fetchDocument($title->number, $versionDate);

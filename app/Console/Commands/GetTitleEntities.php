@@ -88,8 +88,6 @@ class GetTitleEntities extends Command
 			'reserved' => $structure['reserved']?? false,
 			'type' => $structure['type'],
 			'size' => $structure['size'] ?? null,
-			'created_at' => now(),
-			'updated_at' => now(),
 		];
 
 		array_push($this->hashMap, $record);

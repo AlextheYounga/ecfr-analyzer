@@ -4,10 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\ECFRService;	
-use App\Models\Title;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use App\Models\TitleEntity;
 use App\Models\Agency;
+use Illuminate\Support\Facades\DB;
 
 class GetAgencies extends Command
 {
@@ -33,6 +32,7 @@ class GetAgencies extends Command
         $ecfr = new ECFRService();
 		$agencies = $ecfr->fetchAgencies();
 
+
 		foreach($agencies['agencies'] as $agency) {
 			$this->info("Saving agency record for " . $agency['name']);
 
@@ -45,9 +45,7 @@ class GetAgencies extends Command
     }
 
 	private function saveAgency($agency, $parent_id = 0) {
-
-		$agencyTitles = $agency['cfr_references'];
-		return Agency::updateOrCreate([
+		$agency = Agency::updateOrCreate([
 			'slug' => $agency['slug'],
 		],
 		[
@@ -56,16 +54,10 @@ class GetAgencies extends Command
 			'short_name' => $agency['short_name'],
 			'display_name' => $agency['display_name'],
 			'sortable_name' => $agency['sortable_name'],
-			'cfr_references' => $agencyTitles,
+			'cfr_references' => $agency['cfr_references'],
 		]);
 
-		foreach($agencyTitles as $title) {
-			$titleRecord = Title::where('number', $title['number'])->first();
-			if ($titleRecord) {
-				$agencyRecord->titles()->attach($titleRecord->id);
-			}
-
-		}
+		return $agency;
 	}
 
 	private function saveChildren($children, $parent_id) {

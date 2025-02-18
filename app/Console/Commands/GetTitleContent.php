@@ -47,18 +47,16 @@ class GetTitleContent extends Command
 
 				$contentRecord = [
 					'title_id' => $title->id,
-					'entity_id' => $titleEntity->id,
+					'title_entity_id' => $titleEntity->id,
 					'content' => $markdown,
 					'word_count' => $wordCount,
-					'created_at' => now(),
-					'updated_at' => now(),
 				];
 				array_push($contentMap, $contentRecord);
 			}
 
 			$chunks = array_chunk($contentMap, 1000);
 			foreach ($chunks as $chunk) {
-				DB::table('title_content')->insert($chunk);
+				DB::table('title_contents')->insert($chunk);
 			}
 
 			$title->word_count = $titleWords;
@@ -81,11 +79,6 @@ class GetTitleContent extends Command
 		if (!file_exists(base_path('rust/target/release/title_markdown_parser'))) {
 			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
 		}
-
-		if (file_exists(storage_path('app/private/ecfr/current/documents/markdown/flat'))) {
-			$this->info('Already parsed, skipping');
-			return;
-		}	
 
 		// Run the Rust script with argument
 		shell_exec(base_path('rust/target/release/title_markdown_parser flat'));

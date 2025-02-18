@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Save the database to a file
+cd database
+zip database.zip database.sqlite
+mv database.zip ../storage/app/private

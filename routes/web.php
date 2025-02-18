@@ -1,6 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PageController;
+use App\Http\Controllers\DashboardController;
 
-Route::get('/', [PageController::class, 'welcome'])->name('welcome');
+Route::get('/', [DashboardController::class, 'welcome'])->name('welcome');

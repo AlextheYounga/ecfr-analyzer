@@ -19,6 +19,7 @@ return new class extends Migration
 			$table->string('display_name')->nullable();
 			$table->string('sortable_name')->nullable();
 			$table->string('slug');
+			$table->integer('word_count')->index()->nullable();
 			$table->json('cfr_references')->nullable();	
             $table->timestamps();
         });

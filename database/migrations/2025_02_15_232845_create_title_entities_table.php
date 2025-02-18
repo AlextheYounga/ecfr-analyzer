@@ -18,14 +18,12 @@ return new class extends Migration
 			$table->integer('level')->index();
 			$table->integer('order_index')->index();
 			$table->string('type')->index();
-			$table->string('identifier')->nullable();
+			$table->string('identifier')->index()->nullable();
 			$table->string('label')->nullable();
 			$table->string('label_level')->nullable();
 			$table->string('label_description')->nullable();
 			$table->boolean('reserved')->nullable();
 			$table->integer('size')->nullable();
-			$table->json('properties')->nullable();
-            $table->timestamps();
         });
     }
 

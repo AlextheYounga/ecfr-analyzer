@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TitleContent extends Model
 {
-	protected $table = 'title_content';	
+	protected $table = 'title_contents';	
 
     /**
      * The attributes that are mass assignable.
@@ -15,7 +15,7 @@ class TitleContent extends Model
      */
     protected $fillable = [
 		'title_id',
-		'entity_id',
+		'title_entity_id',
 		'content',
 		'word_count',
     ];
@@ -26,6 +26,6 @@ class TitleContent extends Model
 	}
 
 	public function entity() {
-		return $this->belongsTo(TitleEntity::class);
+		return $this->belongsTo(TitleEntity::class, 'title_entity_id');
 	}
 }

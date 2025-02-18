@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('title_content', function (Blueprint $table) {
+        Schema::create('title_contents', function (Blueprint $table) {
             $table->id();
 			$table->foreignId('title_id');
-			$table->foreignId('entity_id');
+			$table->foreignId('title_entity_id');
 			$table->longText('content')->nullable();
-			$table->integer('word_count')->nullable();	
-            $table->timestamps();
+			$table->integer('word_count')->index()->nullable();	
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('title_content');
+        Schema::dropIfExists('title_contents');
     }
 };

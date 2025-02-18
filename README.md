@@ -22,7 +22,9 @@ See the [Developer Notes](./docs/dev-notes.md) for information on **Getting Star
 - [ ] Querying into past history of titles
 - [ ] Frequency of ammendments chart
 
-![Dashboard](./docs/images/dashboard-2.png)
+![Dashboard](./docs/images/dashboard-3.png)
+
+![Dashboard Stats](./docs/images/dashboard-4.png)
 
 I now have all the foundations in place to finish this project as well as explore many more options with this data. 
 

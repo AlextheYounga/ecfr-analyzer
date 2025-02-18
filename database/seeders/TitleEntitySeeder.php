@@ -52,8 +52,6 @@ class TitleEntitySeeder extends Seeder
 			'reserved' => $structure['reserved'] ?? false,
 			'type' => $structure['type'] ?? 'unknown',
 			'size' => $structure['size'] ?? null,
-			'created_at' => now(),
-			'updated_at' => now(),
 		];
 
 		array_push($this->hashMap, $record);

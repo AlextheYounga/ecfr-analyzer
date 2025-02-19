@@ -49,12 +49,25 @@ class TitleEntity extends Model
 		return $this->hasMany(TitleEntity::class, 'parent_id', 'id');
 	}
 
+	public function parent() {
+		return $this->belongsTo(TitleEntity::class, 'parent_id', 'id');
+	}
+
 	public function agencies() {
 		return $this->belongsToMany(Agency::class);
 	}
 
 	public function content() {
 		return $this->hasOne(TitleContent::class);
+	}
+
+	public function getAllParents($parents = []) {
+		$parent = $this->parent()->first();
+		if ($parent) {
+			$parents[] = $parent;
+			return $parent->getAllParents($parents);
+		}
+		return array_reverse($parents);
 	}
 
 	public function getAllChildren()

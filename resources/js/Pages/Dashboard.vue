@@ -193,7 +193,8 @@ import {
 	HomeIcon,
 	DocumentIcon,
 	XMarkIcon,
-	CodeBracketIcon
+	CodeBracketIcon,
+	CircleStackIcon
 } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import { Head } from '@inertiajs/vue3';
@@ -206,6 +207,7 @@ const navigation = [
 ]
 const external = [
 	{ id: 1, name: 'Github', href: 'https://github.com/AlextheYounga/ecfr-analyzer', icon: CodeBracketIcon, current: false },
+	{ id: 2, name: 'Database', href: 'https://drive.proton.me/urls/V1C9H1TBK4#aWpNbp6tUaqe', icon: CircleStackIcon, current: false },
 ]
 
 const sidebarOpen = ref(false);

@@ -138,7 +138,8 @@ import {
 	HomeIcon,
 	DocumentIcon,
 	XMarkIcon,
-	CodeBracketIcon
+	CodeBracketIcon,
+	CircleStackIcon
 } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 import { Head } from '@inertiajs/vue3';

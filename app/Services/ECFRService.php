@@ -52,13 +52,13 @@ class ECFRService
 		try {
 			$response = Http::timeout(600)->get($apiUrl);
 			if ($response->failed()) {
-				echo $response->body() . "\n";
-				throw new \Exception("Failed to fetch document");
+				throw new \Exception("Failed to fetch document: " . $response->status() . " " . $response->body());
 			}
 			return $response->body();
 		} catch (\Exception $e) {
-			echo "Error: " . $e->getMessage() . "\n";
-			return false;
+			return [
+				'error' => $e->getMessage()
+			];
 		}
 	}
 

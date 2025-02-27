@@ -51,4 +51,8 @@ class Title extends Model
 		return $this->hasMany(Version::class);
 	}
 
+	public function versionDates() {
+		return $this->versions()->select('date')->distinct()->get();
+	}
+
 }

@@ -6,27 +6,29 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Services\ECFRService;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use App\Models\TitleEntity;
 use Illuminate\Support\Facades\DB;
 use ZipArchive;
 
-class FetchHistoricalDocumentJob implements ShouldQueue
+class FetchLargeDocumentIncrementJob implements ShouldQueue
 {
     use Queueable;
 
 	public $titleNumber;
 	public $versionDate;
+	public $type;
+	public $identifier;
 	public $instanceId;
 	public $storageDrive;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($titleNumber, $versionDate)
+    public function __construct($titleNumber, $versionDate, $type, $identifier)
     {
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
-		$this->instanceId = $titleNumber . '-' . $versionDate;
+		$this->type = $type;
+		$this->instanceId = $titleNumber . '-' . $versionDate . '-' . $type . '-' . $identifier;
 		$this->storageDrive = env("STORAGE_DRIVE");
     }
 
@@ -57,9 +59,10 @@ class FetchHistoricalDocumentJob implements ShouldQueue
     {
 		$ecfr = new ECFRService();
 		$folder = 'title-' . $this->titleNumber;
-		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '.xml';
+		$increment = $this->type . '-' . $this->identifier;
+		// Underscore so we know it's an increment file
+		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
 		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
-
 
 		// Ensure file path exists
 		if (!file_exists($this->storageDrive . '/' . $folder)) {
@@ -71,7 +74,12 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 		}
 
 		// Fetch from API
-		$xml = $ecfr->fetchDocument($this->titleNumber, $this->versionDate);
+		$xml = $ecfr->fetchDocumentIncrement(
+			$this->titleNumber, 
+			$this->versionDate,
+			$this->type,
+			$this->identifier
+		);
 
 		if (gettype($xml) == "array" && isset($xml['error'])) {
 			$this->fail($xml['error']);
@@ -86,14 +94,6 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 		$zip->open($filepath . '.zip', ZipArchive::CREATE);
 		$zip->addFromString(basename($filepath), $xml);
 		$zip->close();
-	}
-
-	private function getTitleSize() {
-		$titleEntity = TitleEntity::where('identifier', (string) $this->titleNumber)
-			->where('type', 'title')
-			->first();
-		$size = $titleEntity->size;
-		return $size;
 	}
 
 	private function isFailedJob() {

@@ -62,6 +62,23 @@ class ECFRService
 		}
 	}
 
+	public function fetchDocumentIncrement($titleNumber, $versionDate, $incrementType, $incrementNumber) {
+		$apiUrl = $this->apiRoot . 'versioner/v1/full/' . $versionDate . '/title-' . $titleNumber . '.xml';
+		$queryParam = [ $incrementType => $incrementNumber ];
+		echo "Fetching " . $apiUrl ."?$incrementType=$incrementNumber" . "\n";
+		try {
+			$response = Http::timeout(600)->get($apiUrl, $queryParam);
+			if ($response->failed()) {
+				throw new \Exception("Failed to fetch document: " . $response->status() . " " . $response->body());
+			}
+			return $response->body();
+		} catch (\Exception $e) {
+			return [
+				'error' => $e->getMessage()
+			];
+		}
+	}
+
 	public function fetchAgencies() {
 		$apiUrl = $this->apiRoot . 'admin/v1/agencies.json';
 		$response = Http::timeout(60)->get($apiUrl);

@@ -55,7 +55,7 @@ class CompileHistory extends Command
 
 	private function fileAlreadyDownloaded($titleNumber, $versionDate) {
 		$storageDrive = env("STORAGE_DRIVE");
-		$folder = 'title-' . $titleNumber;
+		$folder = 'xml/title-' . $titleNumber;
 		$filename = 'title-' . $titleNumber . '-' . $versionDate . '.xml';
 		$filepath = $storageDrive . '/' . $folder . '/' . $filename;
 		if (file_exists($filepath . '.zip')) {

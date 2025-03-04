@@ -56,7 +56,7 @@ class FetchHistoricalDocumentJob implements ShouldQueue
     public function handle(): void
     {
 		$ecfr = new ECFRService();
-		$folder = 'title-' . $this->titleNumber;
+		$folder = 'xml/title-' . $this->titleNumber;
 		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '.xml';
 		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
 

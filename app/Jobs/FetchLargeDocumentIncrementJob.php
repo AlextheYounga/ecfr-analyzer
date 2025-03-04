@@ -58,17 +58,24 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
     public function handle(): void
     {
 		$ecfr = new ECFRService();
-		$folder = 'title-' . $this->titleNumber;
+		$structureFolder = $this->storageDrive . '/structure/title-' . $this->titleNumber;
+		$structureFile = $structureFolder . '/' . $this->titleNumber . '-' . $this->versionDate . '-' . 'structure.json';	
 
-		$titleEntities = TitleEntity::where('type', $this->type)
-			->where('title_id', (int) $this->titleNumber)
-			->where('version_date', $this->versionDate)
-			->get();
+		if (!file_exists($structureFile)) {	
+			$structureJson = $ecfr->fetchStructure($this->titleNumber, $this->versionDate);
+			if (gettype($structureJson) == "array" && isset($structureJson['error'])) {
+				$this->fail($structureJson['error']);
+			}
+			\file_put_contents($structureFile, \json_encode($structureJson));
+		}
+
+		$structure = json_decode(file_get_contents($structureFile), true);
+		$stuctureEntities = $this->getStructureEntities($structure);
+		$folder = 'xml/title-' . $this->titleNumber . '/' . $this->versionDate;
 		
-		foreach($titleEntities as $entity) {
+		foreach($stuctureEntities as $entity) {
 			$increment = $this->type . '-' . $entity->identifier;
-			// Underscore so we know it's an increment file
-			$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
+			$filename = '_title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
 			$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
 
 			// Ensure file path exists
@@ -97,10 +104,22 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		}
     }
 
-	private function zipFile($filepath, $xml) {
+	private function getStructureEntities($structure, $entities = []) {
+		foreach($structure as $entity) {
+			if ($entity['type'] == $this->type) {
+				$entities[] = $entity;
+			}
+			if (isset($entity['children'])) {
+				$entities = $this->getStructureEntities($entity['children'], $entities);
+			}
+		}
+		return $entities;
+	}
+
+	private function zipFile($filepath, $content) {
 		$zip = new ZipArchive();
 		$zip->open($filepath . '.zip', ZipArchive::CREATE);
-		$zip->addFromString(basename($filepath), $xml);
+		$zip->addFromString(basename($filepath), $content);
 		$zip->close();
 	}
 

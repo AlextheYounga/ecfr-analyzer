@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\TitleEntity;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Services\ECFRService;
@@ -16,19 +17,18 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 	public $titleNumber;
 	public $versionDate;
 	public $type;
-	public $identifier;
 	public $instanceId;
 	public $storageDrive;
 
     /**
      * Create a new job instance.
      */
-    public function __construct($titleNumber, $versionDate, $type, $identifier)
+    public function __construct($titleNumber, $versionDate)
     {
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
-		$this->type = $type;
-		$this->instanceId = $titleNumber . '-' . $versionDate . '-' . $type . '-' . $identifier;
+		$this->type = 'chapter';
+		$this->instanceId = $titleNumber . '-' . $versionDate;
 		$this->storageDrive = env("STORAGE_DRIVE");
     }
 
@@ -59,34 +59,42 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
     {
 		$ecfr = new ECFRService();
 		$folder = 'title-' . $this->titleNumber;
-		$increment = $this->type . '-' . $this->identifier;
-		// Underscore so we know it's an increment file
-		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
-		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
 
-		// Ensure file path exists
-		if (!file_exists($this->storageDrive . '/' . $folder)) {
-			mkdir($this->storageDrive . '/' . $folder, 0777, true);
-		}
-
-		if (file_exists($filepath . '.zip') || $this->isFailedJob()) {
-			return;
-		}
-
-		// Fetch from API
-		$xml = $ecfr->fetchDocumentIncrement(
-			$this->titleNumber, 
-			$this->versionDate,
-			$this->type,
-			$this->identifier
-		);
-
-		if (gettype($xml) == "array" && isset($xml['error'])) {
-			$this->fail($xml['error']);
-		}
+		$titleEntities = TitleEntity::where('type', 'chapter')
+			->where('title_id', (int) $this->titleNumber)
+			->where('version_date', $this->versionDate)
+			->get();
 		
-		$this->zipFile($filepath, $xml);
-		sleep(1);
+		foreach($titleEntities as $entity) {
+			$increment = $this->type . '-' . $entity->identifier;
+			// Underscore so we know it's an increment file
+			$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
+			$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
+
+			// Ensure file path exists
+			if (!file_exists($this->storageDrive . '/' . $folder)) {
+				mkdir($this->storageDrive . '/' . $folder, 0777, true);
+			}
+
+			if (file_exists($filepath . '.zip') || $this->isFailedJob()) {
+				return;
+			}
+
+			// Fetch from API
+			$xml = $ecfr->fetchDocumentIncrement(
+				$this->titleNumber,
+				$this->versionDate,
+				$this->type,
+				$entity->identifier
+			);
+
+			if (gettype($xml) == "array" && isset($xml['error'])) {
+				$this->fail($xml['error']);
+			}
+			
+			$this->zipFile($filepath, $xml);
+			sleep(1);
+		}
     }
 
 	private function zipFile($filepath, $xml) {
@@ -109,5 +117,32 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		} catch(\Exception $e) {
 			return false;
 		}
+	}
+
+	private function convertRomanNumeral($identifier) {
+		$romans = array(
+			'M' => 1000,
+			'CM' => 900,
+			'D' => 500,
+			'CD' => 400,
+			'C' => 100,
+			'XC' => 90,
+			'L' => 50,
+			'XL' => 40,
+			'X' => 10,
+			'IX' => 9,
+			'V' => 5,
+			'IV' => 4,
+			'I' => 1,
+		);
+		
+		$result = 0;
+		foreach ($romans as $key => $value) {
+			while (strpos($identifier, $key) === 0) {
+				$result += $value;
+				$identifier = substr($identifier, strlen($key));
+			}
+		}
+		return $result;
 	}
 }

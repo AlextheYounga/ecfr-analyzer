@@ -27,7 +27,7 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
     {
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
-		$this->type = 'chapter';
+		$this->type = 'part';
 		$this->instanceId = $titleNumber . '-' . $versionDate;
 		$this->storageDrive = env("STORAGE_DRIVE");
     }
@@ -60,7 +60,7 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		$ecfr = new ECFRService();
 		$folder = 'title-' . $this->titleNumber;
 
-		$titleEntities = TitleEntity::where('type', 'chapter')
+		$titleEntities = TitleEntity::where('type', $this->type)
 			->where('title_id', (int) $this->titleNumber)
 			->where('version_date', $this->versionDate)
 			->get();

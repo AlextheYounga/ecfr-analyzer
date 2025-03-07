@@ -27,7 +27,7 @@ class FetchHistoricalDocumentJob implements ShouldQueue
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
 		$this->instanceId = $titleNumber . '-' . $versionDate;
-		$this->storageDrive = env("STORAGE_DRIVE");
+		$this->storageDrive = env("STORAGE_DRIVE") . '/ecfr';
     }
 
 	/**

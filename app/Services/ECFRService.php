@@ -34,6 +34,7 @@ class ECFRService
 
 	public function fetchStructure($titleNumber, $versionDate) {
 		$apiUrl = $this->apiRoot . 'versioner/v1/structure/'. $versionDate . '/title-' . $titleNumber . '.json';
+		echo "Fetching " . $apiUrl . "\n";
 		try {
 			$response = Http::timeout(60)->get($apiUrl);
 			if ($response->failed()) {

@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\TitleEntity;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Services\ECFRService;
@@ -29,7 +28,7 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		$this->versionDate = $versionDate;
 		$this->type = 'part';
 		$this->instanceId = $titleNumber . '-' . $versionDate;
-		$this->storageDrive = env("STORAGE_DRIVE");
+		$this->storageDrive = env("STORAGE_DRIVE") . '/ecfr';
     }
 
 	/**
@@ -58,13 +57,18 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
     public function handle(): void
     {
 		$ecfr = new ECFRService();
-		$structureFolder = $this->storageDrive . '/structure/title-' . $this->titleNumber;
-		$structureFile = $structureFolder . '/' . $this->titleNumber . '-' . $this->versionDate . '-' . 'structure.json';	
+		$structureFolder = $this->storageDrive . '/structure';
+		$structureFile = $structureFolder . '/title-' . $this->titleNumber . '-' . $this->versionDate . '-' . 'structure.json';	
 
 		if (!file_exists($structureFile)) {	
 			$structureJson = $ecfr->fetchStructure($this->titleNumber, $this->versionDate);
-			if (gettype($structureJson) == "array" && isset($structureJson['error'])) {
+			if (isset($structureJson['error'])) {
 				$this->fail($structureJson['error']);
+				return;
+			}
+			// Ensure file path exists
+			if (!file_exists($structureFolder)) {
+				mkdir($structureFolder, 0777, true);
 			}
 			\file_put_contents($structureFile, \json_encode($structureJson));
 		}
@@ -72,9 +76,9 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		$structure = json_decode(file_get_contents($structureFile), true);
 		$stuctureEntities = $this->getStructureEntities($structure);
 		$folder = 'xml/title-' . $this->titleNumber . '/' . $this->versionDate;
-		
+
 		foreach($stuctureEntities as $entity) {
-			$increment = $this->type . '-' . $entity->identifier;
+			$increment = $entity['type'] . '-' . $entity['identifier'];
 			$filename = '_title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $increment . '.xml';
 			$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
 
@@ -92,25 +96,30 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 				$this->titleNumber,
 				$this->versionDate,
 				$this->type,
-				$entity->identifier
+				$entity['identifier']
 			);
 
-			if (gettype($xml) == "array" && isset($xml['error'])) {
+			if (is_array($xml) && isset($xml['error'])) {
 				$this->fail($xml['error']);
+				return;
 			}
 			
 			$this->zipFile($filepath, $xml);
-			sleep(1);
 		}
     }
 
+
 	private function getStructureEntities($structure, $entities = []) {
-		foreach($structure as $entity) {
-			if ($entity['type'] == $this->type) {
-				$entities[] = $entity;
-			}
-			if (isset($entity['children'])) {
-				$entities = $this->getStructureEntities($entity['children'], $entities);
+		if ($structure['type'] == $this->type) {
+			$structureItem = [
+				...$structure,
+				'children' => []
+			];
+			$entities[] = $structureItem;
+		}
+		if (isset($structure['children'])) {
+			foreach($structure['children'] as $child) {
+				$entities = $this->getStructureEntities($child, $entities);
 			}
 		}
 		return $entities;
@@ -136,32 +145,5 @@ class FetchLargeDocumentIncrementJob implements ShouldQueue
 		} catch(\Exception $e) {
 			return false;
 		}
-	}
-
-	private function convertRomanNumeral($identifier) {
-		$romans = array(
-			'M' => 1000,
-			'CM' => 900,
-			'D' => 500,
-			'CD' => 400,
-			'C' => 100,
-			'XC' => 90,
-			'L' => 50,
-			'XL' => 40,
-			'X' => 10,
-			'IX' => 9,
-			'V' => 5,
-			'IV' => 4,
-			'I' => 1,
-		);
-		
-		$result = 0;
-		foreach ($romans as $key => $value) {
-			while (strpos($identifier, $key) === 0) {
-				$result += $value;
-				$identifier = substr($identifier, strlen($key));
-			}
-		}
-		return $result;
 	}
 }

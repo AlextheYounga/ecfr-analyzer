@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Title;
-use App\Models\TitleEntity;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Jobs\FetchHistoricalDocumentJob;
@@ -44,11 +43,11 @@ class CompileHistory extends Command
 					continue;
 				}
 
-				if ($this->fileAlreadyDownloaded($title->number, $formattedDate)) {
-					continue;
-				}
+				// if ($this->fileAlreadyDownloaded($title->number, $formattedDate)) {
+				// 	continue;
+				// }
 
-				FetchHistoricalDocumentJob::dispatch($title->number, $formattedDate);
+				// FetchHistoricalDocumentJob::dispatch($title->number, $formattedDate);
 			}
 		}
     }

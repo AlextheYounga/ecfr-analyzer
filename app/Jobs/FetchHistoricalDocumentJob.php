@@ -9,6 +9,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use App\Models\TitleEntity;
 use Illuminate\Support\Facades\DB;
 use ZipArchive;
+use Illuminate\Support\Facades\Storage;
 
 class FetchHistoricalDocumentJob implements ShouldQueue
 {
@@ -17,7 +18,6 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 	public $titleNumber;
 	public $versionDate;
 	public $instanceId;
-	public $storageDrive;
 
 	// Set the number of times the job may be attempted.
 	public $tries = 3;
@@ -32,7 +32,6 @@ class FetchHistoricalDocumentJob implements ShouldQueue
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
 		$this->instanceId = $titleNumber . '-' . $versionDate;
-		$this->storageDrive = env("STORAGE_DRIVE") . '/ecfr';
     }
 
 	/**
@@ -63,12 +62,8 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 		$ecfr = new ECFRService();
 		$filepath = $this->constructFilePath();
 
-		// Ensure file path exists
-		if (!file_exists(dirname($filepath))) {
-			mkdir(dirname($filepath), 0777, true);
-		}
-
-		if (file_exists($filepath . '.zip')) {
+		Storage::disk('storage_drive')->makeDirectory(dirname($filepath));
+		if (Storage::disk('storage_drive')->exists($filepath . 'zip')) {
 			return;
 		}
 
@@ -79,14 +74,18 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 			$this->fail($xml['error']);
 		}
 		
-		$this->zipFile($filepath, $xml);
+		$this->zipFile(
+			Storage::disk('storage_drive')->path($filepath), 
+			$xml
+		);
+
 		sleep(1);
     }
 
 	private function constructFilePath() {
-		$folder = 'xml/title-' . $this->titleNumber;
+		$folder = 'historical/xml/title-' . $this->titleNumber;
 		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '.xml';
-		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
+		$filepath = "ecfr/$folder/$filename";
 		return $filepath;
 	}
 

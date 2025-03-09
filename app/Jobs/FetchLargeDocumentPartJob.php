@@ -7,6 +7,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use App\Services\ECFRService;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
 class FetchLargeDocumentPartJob implements ShouldQueue
@@ -17,7 +18,6 @@ class FetchLargeDocumentPartJob implements ShouldQueue
 	public $versionDate;
 	public $part;
 	public $instanceId;
-	public $storageDrive;
 
 	// Set the number of times the job may be attempted.
 	public $tries = 3;
@@ -33,7 +33,6 @@ class FetchLargeDocumentPartJob implements ShouldQueue
 		$this->versionDate = $versionDate;
 		$this->part = $part;
 		$this->instanceId = $titleNumber . '-' . $versionDate . '-' . $part;
-		$this->storageDrive = env("STORAGE_DRIVE") . '/ecfr';
     }
 
 	/**
@@ -64,12 +63,8 @@ class FetchLargeDocumentPartJob implements ShouldQueue
 		$ecfr = new ECFRService();
 		$filepath = $this->constructFilePath();
 
-		// Ensure file path exists
-		if (!file_exists(dirname($filepath))) {
-			mkdir(dirname($filepath), 0777, true);
-		}
-
-		if (file_exists($filepath . '.zip')) {
+		Storage::disk('storage_drive')->makeDirectory(dirname($filepath));
+		if (Storage::disk('storage_drive')->exists($filepath . 'zip')) {
 			return;
 		}
 
@@ -91,10 +86,10 @@ class FetchLargeDocumentPartJob implements ShouldQueue
 
 
 	private function constructFilePath() {
-		$folder = 'xml/title-' . $this->titleNumber . '/partials/' . $this->versionDate;
+		$folder = 'historical/xml/title-' . $this->titleNumber . '/partials/' . $this->versionDate;
 		$part = 'part-' . $this->part;
 		$filename = '_title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $part . '.xml';
-		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
+		$filepath = "ecfr/$folder/$filename";
 		return $filepath;
 	}
 

@@ -37,13 +37,10 @@ class GetTitleEntities extends Command
     {
         $ecfr = new ECFRService();
 		$titles = Title::all();
-		TitleEntity::truncate();
-		
+		$this->warn('Truncating TitleEntity table...');
+		DB::delete('DELETE FROM title_entities');
+
 		foreach($titles as $title) {
-			if ($title->structure_reference && file_exists($title->structure_reference)) {
-				$this->info("Title " . $title->number . " already has a structure reference, skipping");
-				continue;
-			}
 			$this->info("Saving title structure for Title " . $title->number);
 
 			if ($title['reserved']) {
@@ -52,7 +49,7 @@ class GetTitleEntities extends Command
 			}
 
 			// Ensure directory exists
-			Storage::disk('local')->makeDirectory('ecfr/current/structure');
+			Storage::disk('storage_drive')->makeDirectory('ecfr/current/structure');
 
 			// Fetch the structure for the title
 			$titleNumber = (string) $title->number;
@@ -66,11 +63,7 @@ class GetTitleEntities extends Command
 
 			// Save the structure to a file
 			$filepath = 'ecfr/current/structure/title-' . $titleNumber . '-structure.json';
-			Storage::disk('local')->put($filepath, json_encode($structure));	
-
-			// Add file reference to Title table
-			$title->structure_reference = storage_path('app/private/'. $filepath);	
-			$title->save();	
+			Storage::disk('storage_drive')->put($filepath, $structure);	
 			sleep(1);
 		}	
 

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Jobs\FetchHistoricalDocumentJob;
 use App\Jobs\FetchLargeDocumentPartJob;
 use App\Models\Version;
+use Illuminate\Support\Facades\Storage;
 
 class CompileHistory extends Command
 {
@@ -70,25 +71,22 @@ class CompileHistory extends Command
 	}
 
 	private function fileAlreadyDownloaded($titleNumber, $versionDate) {
-		$storageDrive = env("STORAGE_DRIVE") . '/ecfr';
 		$folder = '/xml/title-' . $titleNumber;
 		$filename = '/title-' . $titleNumber . '-' . $versionDate . '.xml';
-		$filepath = $storageDrive . $folder . $filename;
-
-		if (file_exists($filepath . '.zip')) {
+		$filepath = "/ecfr/$folder/$filename.zip";
+		if (Storage::disk('storage_drive')->exists($filepath)) {
 			return true;
 		}
 		return false;
 	}
 
 	private function largeFileAlreadyDownloaded($titleNumber, $versionDate, $part) {
-		$storageDrive = env("STORAGE_DRIVE") . '/ecfr';
 		$folder = 'xml/title-' . $titleNumber . "/partials/" . $versionDate;
 		$part = 'part-' . $part;
 		$filename = '_title-' . $titleNumber . '-' . $versionDate . '-' . $part . '.xml';
-		$filepath = $storageDrive . '/' . $folder . '/' . $filename;
+		$filepath = "/ecfr/$folder/$filename.zip";
 
-		if (file_exists($filepath . '.zip')) {
+		if (Storage::disk('storage_drive')->exists($filepath)) {
 			return true;
 		}
 		return false;

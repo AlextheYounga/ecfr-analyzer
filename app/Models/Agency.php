@@ -48,14 +48,4 @@ class Agency extends Model
 	{
 		return $this->belongsToMany(TitleEntity::class);
 	}
-
-	public function getWords() {
-		$wordsCountQuery = DB::table('agency_title_entity')
-			->join('title_entities', 'agency_title_entity.title_entity_id', '=', 'title_entities.id')
-			->join('title_contents', 'title_entities.id', '=', 'title_contents.title_entity_id')
-			->where('agency_title_entity.agency_id', $this->id)
-			->where('title_entities.type', 'section')
-			->sum('title_contents.word_count');
-		return $wordsCountQuery;
-	}
 }

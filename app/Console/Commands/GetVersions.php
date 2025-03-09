@@ -43,11 +43,11 @@ class GetVersions extends Command
 			$versions = $ecfr->fetchVersions($title->number);
 
 			// Ensure directory exists
-			Storage::disk('local')->makeDirectory('ecfr/current/versions');
+			Storage::disk('storage_drive')->makeDirectory('ecfr/current/versions');
 
 			// Save to disk
 			$filename = 'ecfr/current/versions/title-'. $title->number . '-versions.json';
-			Storage::disk('local')->put($filename, json_encode($versions));
+			Storage::disk('storage_drive')->put($filename, json_encode($versions));
 
 			sleep(0.5);
 		}

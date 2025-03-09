@@ -33,7 +33,7 @@ class GetAgencyTitleRelations extends Command
 		DB::table('agency_title_entity')->truncate();	
 		$agencies = Agency::all();
 		foreach($agencies as $agency) {
-			$this->info("Saving title_entity relations for " . $agency->name);
+			$this->info("Saving title_entity relations for " . $agency->id . " " . $agency->name);
 			$references = $agency->cfr_references;
 			$agencyEntities = [];
 	

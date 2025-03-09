@@ -25,7 +25,7 @@ class VersionSeeder extends Seeder
 			$versionRecords = [];
 
 			// Ensure directory exists
-			$versionFile = Storage::disk('local')->get('ecfr/current/versions/title-'. $title->number . '-versions.json');
+			$versionFile = Storage::disk('storage_drive')->get('ecfr/current/versions/title-'. $title->number . '-versions.json');
 			$versions = json_decode($versionFile, true);
 
 			foreach($versions['content_versions'] as $version) {

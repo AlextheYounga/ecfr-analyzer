@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\ECFRService;
 use App\Models\Title;
+use Illuminate\Support\Facades\Storage;
 
 class GetTitles extends Command
 {
@@ -42,9 +43,10 @@ class GetTitles extends Command
 					'latest_issue_date' => $title['latest_issue_date'],
 					'up_to_date_as_of' => $title['up_to_date_as_of'],
 					'reserved' => $title['reserved'],
-					'structure_reference' => storage_path('app/private/'. $structureFilePath)
+					'structure_reference' => Storage::disk('storage_drive')->path($structureFilePath),
 				]
 			);	
 		}	
+		$this->info('Fetched titles.');
     }
 }

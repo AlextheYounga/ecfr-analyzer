@@ -29,7 +29,6 @@ return [
     */
 
     'disks' => [
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
@@ -47,6 +46,14 @@ return [
             'report' => false,
         ],
 
+		'storage_drive' => [
+            'driver' => 'local',
+            'root' => env('STORAGE_DRIVE'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -59,7 +66,6 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
     ],
 
     /*

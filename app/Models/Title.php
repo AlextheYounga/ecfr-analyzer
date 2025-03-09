@@ -24,6 +24,13 @@ class Title extends Model
     ];
 
 	/**
+	 * The attributes that should be appended to the model.
+	 *
+	 * @var array<int, string>
+	 */
+	protected $appends = ['large'];
+
+	/**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -37,6 +44,11 @@ class Title extends Model
 			'properties' => 'json',
         ];
     }
+
+	public function getLargeAttribute() {
+		// Currently only Title 40 is too large to download in one go.
+		return $this->entities()->first()->size > 100000000; // 100MB
+	}
 
 	public function agencies()
     {

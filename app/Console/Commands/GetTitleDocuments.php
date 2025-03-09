@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Title;
 use App\Jobs\FetchCurrentDocumentJob;
-use Illuminate\Support\Facades\DB;
 
 
 class GetTitleDocuments extends Command
@@ -29,9 +28,8 @@ class GetTitleDocuments extends Command
      */
     public function handle()
     {
-		DB::table('jobs')->truncate();
-		DB::table('failed_jobs')->truncate();
-		DB::table('cache_locks')->truncate();
+		$this->call('queue:clear');
+		$this->call('queue:flush');
 
         $titles = Title::all();
 		if (!$titles) {

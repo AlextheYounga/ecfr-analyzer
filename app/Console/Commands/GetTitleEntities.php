@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\ECFRService;
 use App\Models\Title;
-use App\Models\TitleEntity;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 

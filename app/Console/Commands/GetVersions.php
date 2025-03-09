@@ -6,8 +6,6 @@ use Illuminate\Console\Command;
 use App\Services\ECFRService;
 use App\Models\Version;
 use App\Models\Title;
-use App\Models\TitleEntity;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class GetVersions extends Command

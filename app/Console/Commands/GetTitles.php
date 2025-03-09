@@ -32,7 +32,6 @@ class GetTitles extends Command
 
 		// Download Titles
 		$titles = $ecfr->fetchTitles();
-		
 		foreach($titles['titles'] as $title) {
 			$structureFilePath = 'ecfr/current/structure/title-' . $title['number'] . '-structure.json';
 			Title::updateOrCreate(

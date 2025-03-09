@@ -29,8 +29,6 @@ return new class extends Migration
         });
     }
 
-	// "date":"2016-12-23","amendment_date":"2016-12-23","issue_date":"2017-01-01","identifier":"1.1","name":"§ 1.1   Creation and authority.","part":"1","substantive":true,"removed":false,"subpart":"A","title":"40","type":"section"
-
     /**
      * Reverse the migrations.
      */

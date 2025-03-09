@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Title;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use App\Jobs\FetchHistoricalDocumentJob;
 use App\Jobs\FetchLargeDocumentPartJob;
 use App\Models\Version;
@@ -17,7 +16,7 @@ class CompileHistory extends Command
      *
      * @var string
      */
-    protected $signature = 'job:compile-history';
+    protected $signature = 'ecfr:history';
 
     /**
      * The console command description.
@@ -31,13 +30,12 @@ class CompileHistory extends Command
      */
     public function handle()
     {
-		DB::table('jobs')->truncate();
-		DB::table('failed_jobs')->truncate();
-
-		$largeTitles = ['40']; 		// Title 40 is too large, we will have to handle this one separately
+		$this->call('queue:clear');
+		$this->call('queue:flush');
+	
 		$titles = Title::all();
 		foreach($titles as $title) {
-			if (in_array($title->number, $largeTitles)) {
+			if ($title->large) {
 				$this->createLargeDocumentsJobs($title);
 				continue;
 			}
@@ -46,8 +44,8 @@ class CompileHistory extends Command
     }
 
 	private function createDocumentsJobs($title) {
-		foreach($title->versionDates() as $date) {
-			$formattedDate = $date->date->format('Y-m-d');
+		foreach($title->versionDates() as $version) {
+			$formattedDate = $version->issue_date->format('Y-m-d');
 			if ($this->fileAlreadyDownloaded($title->number, $formattedDate)) {
 				continue;
 			}
@@ -69,11 +67,12 @@ class CompileHistory extends Command
 			FetchLargeDocumentPartJob::dispatch($title->number, $formattedDate, $version->part);	
 		}
 	}
-
+	
 	private function fileAlreadyDownloaded($titleNumber, $versionDate) {
-		$folder = '/xml/title-' . $titleNumber;
-		$filename = '/title-' . $titleNumber . '-' . $versionDate . '.xml';
-		$filepath = "/ecfr/$folder/$filename.zip";
+		$folder = 'historical/xml/title-' . $titleNumber;
+		$filename = 'title-' . $titleNumber . '-' . $versionDate . '.xml';
+		$filepath = "ecfr/$folder/$filename.zip";
+		
 		if (Storage::disk('storage_drive')->exists($filepath)) {
 			return true;
 		}
@@ -81,10 +80,10 @@ class CompileHistory extends Command
 	}
 
 	private function largeFileAlreadyDownloaded($titleNumber, $versionDate, $part) {
-		$folder = 'xml/title-' . $titleNumber . "/partials/" . $versionDate;
+		$folder = 'historical/xml/title-' . $titleNumber . "/partials/" . $versionDate;
 		$part = 'part-' . $part;
 		$filename = '_title-' . $titleNumber . '-' . $versionDate . '-' . $part . '.xml';
-		$filepath = "/ecfr/$folder/$filename.zip";
+		$filepath = "ecfr/$folder/$filename.zip";
 
 		if (Storage::disk('storage_drive')->exists($filepath)) {
 			return true;

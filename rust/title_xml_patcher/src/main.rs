@@ -1,10 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 use std::fs;
 use std::io::BufReader;
 use std::env;
-use std::path::PathBuf;
 use dotenv::dotenv;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use rusqlite::{ Connection, Result };
 use xmltree::{ Element, XMLNode };
 
@@ -18,44 +17,45 @@ fn db_connection() -> Result<Connection> {
     Connection::open("database/database.sqlite")
 }
 
-fn get_latest_issue_date(doc_num: i32, db: &Connection) -> String {
-	let sql_str = format!("SELECT latest_issue_date FROM titles WHERE id = {} LIMIT 1", doc_num);
-	let mut stmt = db.prepare(&sql_str).unwrap();
-	let mut latest_issue_date = String::new();	
-
-	let results: Vec<Result<String>> = stmt.query_map([], |row| {
-		Ok(row.get(0)?)
-	}).unwrap().collect();
+fn get_large_documents(db: &Connection) -> Vec<i32> {
+	let sql_str = "SELECT title_id FROM title_entities WHERE size > 100000000 AND type = 'title';";
+	let mut stmt = db.prepare(sql_str).unwrap();
+	let results: Vec<i32> = stmt.query_map([], |row| row.get(0))
+		.unwrap()
+		.map(|x| x.unwrap())
+		.collect();
 	
-	// There should only be one result
-	for result in results {
-		latest_issue_date = result.unwrap();
-	}
-	return latest_issue_date;
+	return results;
 }
 
-fn read_latest_issue_document(xml_dir: &str, doc_num: i32, issue_date: &str) -> BufReader<fs::File> {
-	let title_folder = format!("{}/title-{}", xml_dir, doc_num);
-	let filename = format!("/title-{}-{}.xml", doc_num, issue_date);
-	let filepath = format!("{}/{}", title_folder, filename);
+fn read_latest_issue_document(storage_folder: &str, doc_num: i32) -> Element {
+	let current_folder = format!("{}/ecfr/current/documents/xml", storage_folder);
+	let filepath = format!("{}/title-{}.xml", current_folder, doc_num);
 
 	let file = fs::File::open(&filepath).expect(&format!("Failed to open file: {}", filepath));
 	let reader = BufReader::new(file);
-	return reader;
+	let root = Element::parse(reader).expect(&format!("Failed to parse XML file: {}", filepath));
+	return root;
+}	
+
+fn read_document_part_file(xml_file: &str) -> Element {
+	let file = fs::File::open(xml_file).expect(&format!("Failed to open file: {}", xml_file));
+	let reader = BufReader::new(file);
+	let root = Element::parse(reader).expect(&format!("Failed to parse XML file: {}", xml_file));
+	return root;
 }
 
 fn main() -> Result<()> {
 	dotenv().ok();
-	let storage_folder = env::var("STORAGE_FOLDER").unwrap_err();
-	let large_documents = [40];
+	
     let db = db_connection()?;
-	let xml_directory = format!("{}/ecfr/xml", storage_folder);
-	for doc_num in large_documents {
-		let latest_issue_date = get_latest_issue_date(doc_num, &db);
-		let base_document = read_latest_issue_document(&xml_directory, doc_num, &latest_issue_date);
-		
+	let storage_folder = env::var("STORAGE_DRIVE").unwrap();
+	let xml_directory = format!("{}/ecfr/historical/xml", storage_folder);
+	let large_documents = get_large_documents(&db);
 
-		let title_folder = format!("{}/title-{}/partials", xml_directory, doc_num);
+	for doc_num in large_documents {
+		let base_document = read_latest_issue_document(&storage_folder, doc_num);
+		let title_partials_folder = format!("{}/title-{}/partials", xml_directory, doc_num);
 		let sql_str = format!("SELECT DISTINCT issue_date, part FROM versions WHERE title_id = {}", doc_num);
 		let mut stmt = db.prepare(&sql_str)?;
 	
@@ -68,40 +68,54 @@ fn main() -> Result<()> {
 			})?
 			.collect();
 
+		let mut version_map = HashMap::new();
 		for version in version_results {
-			let version = version?;
-			let issue_date = version.issue_date;
-			let part = version.part;
-			let xml_file = format!("{}/{}/_title-{}-{}-part-{}.xml.zip", title_folder, issue_date, doc_num, issue_date, part);
-			println!("Processing: {}", xml_file);
+			let version = version.unwrap();
+			version_map.entry(version.issue_date.clone())
+				.or_insert_with(Vec::new)
+				.push(version.part.clone());
+		}
 
-			match fs::File::open(&xml_file) {
-				Ok(file) => {
-					let reader = BufReader::new(file);
-					match Element::parse(reader) {
-						Ok(mut root) => {
-							if let Some(node) = root.get_mut_child("part") {
-								if let Some(node) = node.get_mut_child("section") {
-									if let Some(node) = node.get_mut_child("p") {
-										if let Some(node) = node.get_mut_child("a") {
-											node.attributes.insert("href".to_string(), "https://www.ecfr.gov".to_string());
-										}
-									}
+		// rayon::ThreadPoolBuilder::new().num_threads(20).build_global().unwrap(); // Set number of threads to 20
+		// version_map.par_iter().for_each(|(issue_date, parts)| {
+		for (issue_date, parts) in version_map.iter() {
+			println!("Processing title-{} for issue date: {}", doc_num, issue_date);
+			let mut document_clone = base_document.clone();
+			for part in parts {
+				let version_folder = format!("{}/{}", title_partials_folder, issue_date);
+				let xml_file = format!("{}/_title-{}-{}-part-{}.xml", version_folder, doc_num, issue_date, part);
+
+				if Path::new(&xml_file).exists() == false {
+					// eprintln!("XML does not exist: {}", xml_file);
+					continue;
+				}
+
+				let document_part = read_document_part_file(&xml_file);
+
+				for child in document_part.children.iter() {
+					if let XMLNode::Element(e) = child {
+						if e.name.contains("DIV") && e.attributes.get("N") == Some(part) && e.attributes.get("TYPE") == Some(&"PART".to_string()) {
+							match document_clone.get_mut_child("DIV") {
+								Some(div) => {
+									div.children.push(XMLNode::Element(e.clone()));
+								}
+								None => {
+									eprintln!("Failed to find matching DIV in document_clone for part: {}", part);
 								}
 							}
 						}
-						Err(e) => {
-							eprintln!("Failed to parse XML file {}: {}", xml_file, e);
-						}
 					}
 				}
-				Err(e) => {
-					eprintln!("Failed to open file {}: {}", xml_file, e);
-				}
 			}
+
+			let title_folder = format!("{}/title-{}", xml_directory, doc_num);
+			let output_file = format!("{}/title-{}-{}.xml", title_folder, doc_num, issue_date);
+			let mut output = fs::File::create(&output_file).expect(&format!("Failed to create output file: {}", output_file));
+			document_clone.write(&mut output).expect(&format!("Failed to write to output file: {}", output_file));
+			break;
+		// });
 		}
 	}
-
 
 	Ok(())
 }

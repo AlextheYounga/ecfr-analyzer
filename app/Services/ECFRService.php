@@ -36,14 +36,15 @@ class ECFRService
 		$apiUrl = $this->apiRoot . 'versioner/v1/structure/'. $versionDate . '/title-' . $titleNumber . '.json';
 		echo "Fetching " . $apiUrl . "\n";
 		try {
-			$response = Http::timeout(60)->get($apiUrl);
+			$response = Http::timeout(600)->get($apiUrl);
 			if ($response->failed()) {
-				throw new \Exception("Failed to fetch document");
+				throw new \Exception("Failed to fetch structure: " . $response->status() . " " . $response->body());
 			}
-			return \json_decode($response->body(), true);
+			return $response->body();
 		} catch (\Exception $e) {
-			echo "Error fetching structure for title " . $titleNumber . "\n";
-			echo $e->getMessage() . "\n";
+			return [
+				'error' => $e->getMessage()
+			];
 		}
 	}
 

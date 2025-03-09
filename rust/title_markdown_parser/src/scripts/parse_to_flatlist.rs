@@ -57,6 +57,7 @@ fn xml_element_to_string(element: &Element) -> String {
 }
 
 pub fn run() -> Result<()> {
+	// Setup db
     let db = db_connection()?;
     let mut stmt = db.prepare(
         "SELECT number, structure_reference FROM titles WHERE reserved = false"
@@ -71,8 +72,8 @@ pub fn run() -> Result<()> {
         })?
         .collect();
 
-    let title_file_directory = "./storage/app/private/ecfr/current/documents/xml";
-    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown/flat";
+    let title_file_directory = "./storage/app/private/ecfr/xml";
+    let markdown_directory = "./storage/app/private/ecfr/markdown/flat";
 
     title_results.into_par_iter().for_each(|title_result| {
         if let Ok(title) = title_result {

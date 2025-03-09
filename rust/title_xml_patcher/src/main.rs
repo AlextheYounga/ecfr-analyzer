@@ -18,8 +18,30 @@ fn db_connection() -> Result<Connection> {
     Connection::open("database/database.sqlite")
 }
 
-fn read_base_xml_file() {
+fn get_latest_issue_date(doc_num: i32, db: &Connection) -> String {
+	let sql_str = format!("SELECT latest_issue_date FROM titles WHERE id = {} LIMIT 1", doc_num);
+	let mut stmt = db.prepare(&sql_str).unwrap();
+	let mut latest_issue_date = String::new();	
+
+	let results: Vec<Result<String>> = stmt.query_map([], |row| {
+		Ok(row.get(0)?)
+	}).unwrap().collect();
 	
+	// There should only be one result
+	for result in results {
+		latest_issue_date = result.unwrap();
+	}
+	return latest_issue_date;
+}
+
+fn read_latest_issue_document(xml_dir: &str, doc_num: i32, issue_date: &str) -> BufReader<fs::File> {
+	let title_folder = format!("{}/title-{}", xml_dir, doc_num);
+	let filename = format!("/title-{}-{}.xml", doc_num, issue_date);
+	let filepath = format!("{}/{}", title_folder, filename);
+
+	let file = fs::File::open(&filepath).expect(&format!("Failed to open file: {}", filepath));
+	let reader = BufReader::new(file);
+	return reader;
 }
 
 fn main() -> Result<()> {
@@ -29,6 +51,10 @@ fn main() -> Result<()> {
     let db = db_connection()?;
 	let xml_directory = format!("{}/ecfr/xml", storage_folder);
 	for doc_num in large_documents {
+		let latest_issue_date = get_latest_issue_date(doc_num, &db);
+		let base_document = read_latest_issue_document(&xml_directory, doc_num, &latest_issue_date);
+		
+
 		let title_folder = format!("{}/title-{}/partials", xml_directory, doc_num);
 		let sql_str = format!("SELECT DISTINCT issue_date, part FROM versions WHERE title_id = {}", doc_num);
 		let mut stmt = db.prepare(&sql_str)?;

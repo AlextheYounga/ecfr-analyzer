@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use rusqlite::{ Connection, Result };
 use xmltree::{ Element, XMLNode };
 use serde_json::Value;
+
 use html2md::parse_html;
 
 #[derive(Debug)]
@@ -131,8 +132,8 @@ pub fn run() -> Result<()> {
         })?
         .collect();
 
-    let title_file_directory = "./storage/app/private/ecfr/current/documents/xml";
-    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown/nested";
+		let title_file_directory = "./storage/app/private/ecfr/xml";
+		let markdown_directory = "./storage/app/private/ecfr/markdown/nested";
 
     // Parallel loop. FAST (may be too much for production)
     title_results.into_par_iter().for_each(|title_result| {

@@ -138,8 +138,9 @@ pub fn run() -> Result<()> {
         })?
         .collect();
 
-    let title_file_directory = "./storage/app/private/ecfr/current/documents/xml";
-    let markdown_directory = "./storage/app/private/ecfr/current/documents/markdown/full";
+	let title_file_directory = "./storage/app/private/ecfr/xml";
+	let markdown_directory = "./storage/app/private/ecfr/markdown/full";
+
     fs::create_dir_all(markdown_directory).unwrap_or_else(|_|
         panic!("Failed to create directory: {}", markdown_directory)
     );

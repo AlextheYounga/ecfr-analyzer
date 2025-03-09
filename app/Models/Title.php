@@ -52,7 +52,7 @@ class Title extends Model
 	}
 
 	public function versionDates() {
-		return $this->versions()->select('date')->distinct()->get();
+		return $this->versions()->select('issue_date')->distinct()->get();
 	}
 
 }

@@ -39,6 +39,7 @@ class GetTitleDocuments extends Command
 
 		// Ensure directory exists
 		Storage::disk('local')->makeDirectory('ecfr/current/documents/xml');
+		$storageDrive = env("STORAGE_DRIVE") . '/ecfr/xml';
 
 		foreach ($titles as $title) {
 			$filename = 'ecfr/current/documents/xml/title-' . $title->number . '.xml';
@@ -58,6 +59,10 @@ class GetTitleDocuments extends Command
 			if ($xml) {
 				Storage::disk('local')->put($filename, $xml);
 				$this->info("Downloaded title " . $title['number'] . ' on date ' . $versionDate);
+				if (\file_exists($storageDrive . '/title-' . $title->number)) {
+					$filename = '/title-' . $title->number . '-' . $versionDate . '.xml';
+					\file_put_contents($storageDrive . '/title-' . $title->number . $filename, $xml);
+				}
 			} else {
 				Log::error($filename);
 			} 

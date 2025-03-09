@@ -6,16 +6,16 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Services\ECFRService;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use App\Models\TitleEntity;
 use Illuminate\Support\Facades\DB;
 use ZipArchive;
 
-class FetchHistoricalDocumentJob implements ShouldQueue
+class FetchLargeDocumentPartJob implements ShouldQueue
 {
     use Queueable;
 
 	public $titleNumber;
 	public $versionDate;
+	public $part;
 	public $instanceId;
 	public $storageDrive;
 
@@ -27,11 +27,12 @@ class FetchHistoricalDocumentJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($titleNumber, $versionDate)
+    public function __construct($titleNumber, $versionDate, $part)
     {
         $this->titleNumber = $titleNumber;
 		$this->versionDate = $versionDate;
-		$this->instanceId = $titleNumber . '-' . $versionDate;
+		$this->part = $part;
+		$this->instanceId = $titleNumber . '-' . $versionDate . '-' . $part;
 		$this->storageDrive = env("STORAGE_DRIVE") . '/ecfr';
     }
 
@@ -73,27 +74,34 @@ class FetchHistoricalDocumentJob implements ShouldQueue
 		}
 
 		// Fetch from API
-		$xml = $ecfr->fetchDocument($this->titleNumber, $this->versionDate);
+		$xml = $ecfr->fetchDocumentIncrement(
+			$this->titleNumber,
+			$this->versionDate,
+			'part',
+			$this->part
+		);
 
-		if (gettype($xml) == "array" && isset($xml['error'])) {
+		if (is_array($xml) && isset($xml['error'])) {
 			$this->fail($xml['error']);
+			return;
 		}
 		
 		$this->zipFile($filepath, $xml);
-		sleep(1);
     }
 
+
 	private function constructFilePath() {
-		$folder = 'xml/title-' . $this->titleNumber;
-		$filename = 'title-' . $this->titleNumber . '-' . $this->versionDate . '.xml';
+		$folder = 'xml/title-' . $this->titleNumber . '/partials/' . $this->versionDate;
+		$part = 'part-' . $this->part;
+		$filename = '_title-' . $this->titleNumber . '-' . $this->versionDate . '-' . $part . '.xml';
 		$filepath = $this->storageDrive . '/' . $folder . '/' . $filename;
 		return $filepath;
 	}
 
-	private function zipFile($filepath, $xml) {
+	private function zipFile($filepath, $content) {
 		$zip = new ZipArchive();
 		$zip->open($filepath . '.zip', ZipArchive::CREATE);
-		$zip->addFromString(basename($filepath), $xml);
+		$zip->addFromString(basename($filepath), $content);
 		$zip->close();
 	}
 }

@@ -47,7 +47,11 @@ class Title extends Model
 
 	public function getLargeAttribute() {
 		// Currently only Title 40 is too large to download in one go.
-		return $this->entities()->first()->size > 100000000; // 100MB
+		$entityTitle = $this->entities()->first();
+		if ($entityTitle === null) {
+			return false;
+		}
+		return $entityTitle->size > 100000000; // 100MB
 	}
 
 	public function agencies()

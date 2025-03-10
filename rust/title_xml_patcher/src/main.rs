@@ -3,9 +3,11 @@ use std::fs;
 use std::io::BufReader;
 use std::env;
 use dotenv::dotenv;
-// use rayon::prelude::*;
+use rayon::prelude::*;
 use rusqlite::{ Connection, Result };
 use xmltree::{ Element, XMLNode };
+use zip::write::FileOptions;
+use zip::ZipWriter;
 
 #[derive(Debug)]
 struct VersionRecord {
@@ -45,6 +47,25 @@ fn read_document_part_file(xml_file: &str) -> Element {
 	return root;
 }
 
+fn write_zip_file(output_file: &str, document_clone: Element) {
+    // Get just the basename without extension
+    let basename = Path::new(output_file).file_stem().unwrap().to_str().unwrap();
+    let zip_file = format!("{}.zip", &output_file);
+    let output = fs::File::create(&zip_file).expect(&format!("Failed to create output file: {}", zip_file));
+    let mut zip = ZipWriter::new(output);
+    let options: FileOptions<'_, ()> = FileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+
+    // Add the .xml extension to the file inside the zip
+    let file_in_zip = format!("{}.xml", basename);
+    
+    // Now use this name when starting the file in the zip
+    zip.start_file(&file_in_zip, options).expect("Failed to start file in zip");
+    document_clone.write(&mut zip).expect("Failed to write XML to zip");
+
+    zip.finish().expect("Failed to finish zip file");
+}
+
 fn main() -> Result<()> {
 	dotenv().ok();
 	
@@ -55,7 +76,9 @@ fn main() -> Result<()> {
 
 	for doc_num in large_documents {
 		let base_document = read_latest_issue_document(&storage_folder, doc_num);
-		let title_partials_folder = format!("{}/title-{}/partials", xml_directory, doc_num);
+		let title_folder = format!("{}/title-{}", xml_directory, doc_num);
+		let partials_folder = format!("{}/partials", title_folder);
+		
 		let sql_str = format!("SELECT DISTINCT issue_date, part FROM versions WHERE title_id = {}", doc_num);
 		let mut stmt = db.prepare(&sql_str)?;
 	
@@ -76,13 +99,26 @@ fn main() -> Result<()> {
 				.push(version.part.clone());
 		}
 
-		// rayon::ThreadPoolBuilder::new().num_threads(20).build_global().unwrap(); // Set number of threads to 20
-		// version_map.par_iter().for_each(|(issue_date, parts)| {
-		for (issue_date, parts) in version_map.iter() {
+		rayon::ThreadPoolBuilder::new().num_threads(25).build_global().unwrap(); // Set number of threads to 20
+		version_map.par_iter().for_each(|(issue_date, parts)| {
+			let output_file = format!("{}/title-{}-{}.xml", title_folder, doc_num, issue_date);
+			let zip_file = format!("{}.zip", &output_file);
+
+			// Skip if the output file already exists
+			if Path::new(&zip_file).exists() {
+				return;
+			}
+
 			println!("Processing title-{} for issue date: {}", doc_num, issue_date);
 			let mut document_clone = base_document.clone();
+			
+			if parts.len() == 0 {
+				eprintln!("No parts found for title-{} and issue date: {}", doc_num, issue_date);
+				return;
+			}
+
 			for part in parts {
-				let version_folder = format!("{}/{}", title_partials_folder, issue_date);
+				let version_folder = format!("{}/{}", partials_folder, issue_date);
 				let xml_file = format!("{}/_title-{}-{}-part-{}.xml", version_folder, doc_num, issue_date, part);
 
 				if Path::new(&xml_file).exists() == false {
@@ -108,13 +144,10 @@ fn main() -> Result<()> {
 				}
 			}
 
-			let title_folder = format!("{}/title-{}", xml_directory, doc_num);
-			let output_file = format!("{}/title-{}-{}.xml", title_folder, doc_num, issue_date);
-			let mut output = fs::File::create(&output_file).expect(&format!("Failed to create output file: {}", output_file));
-			document_clone.write(&mut output).expect(&format!("Failed to write to output file: {}", output_file));
-			break;
-		// });
-		}
+			write_zip_file(&output_file, document_clone);
+
+			println!("Finished {}", zip_file);
+		});
 	}
 
 	Ok(())

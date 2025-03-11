@@ -5,14 +5,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Collect the arguments passed to the script
     let args: Vec<String> = env::args().collect();
 
+	if args.len() < 4 {
+		eprintln!("Usage: title_markdown_parser <subroutine> <structure_folder> <input_folder> <output_folder>");
+		std::process::exit(1);
+	}
+
     // Get the first argument
-    let argument = &args[1];
+    let subroutine = &args[1];
+	let structure_folder = &args[2];
+	let input_folder = &args[3];
+	let output_folder = &args[4];
+
 
     // Match the argument and perform actions based on its value
-    match argument.as_str() {
-        "flat" => scripts::parse_to_flatlist::run()?,
-        "nested" => scripts::parse_to_nested::run()?,
-        "full" => scripts::parse_to_full_title::run()?,
+    match subroutine.as_str() {
+        "flat" => scripts::parse_to_flatlist::run(input_folder, output_folder, structure_folder),
+        "nested" => scripts::parse_to_nested::run(input_folder, output_folder, structure_folder),
+        "full" => scripts::parse_to_full_title::run(input_folder, output_folder, structure_folder),
         _ => unreachable!("Invalid argument provided"),
     }
 

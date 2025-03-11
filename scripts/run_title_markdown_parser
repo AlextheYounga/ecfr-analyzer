@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SUBROUTINE=$1 # nested, flat or full
+INPUT_FOLDER=$2 # Path to the folder containing the XML files
+OUTPUT_FOLDER=$3 # Path to where the markdown files will be saved
+STRUCTURE_FOLDER=$4 # Path where we have saved title structure files
+
+# Run Rust parser
+./rust/target/release/title_markdown_parser $SUBROUTINE $STRUCTURE_FOLDER $INPUT_FOLDER $OUTPUT_FOLDER

@@ -1,0 +1,35 @@
+#!/bin/bash
+source .env
+HISTORICAL_FOLDER=$STORAGE_DRIVE/ecfr/historical/xml
+GIT_FOLDER=./storage/app/private/git
+WORKING_FOLDER=./storage/app/private/ecfr/xml
+
+rm -rf ./storage/app/private/ecfr
+mkdir -p $GIT_FOLDER	
+mkdir -p $WORKING_FOLDER
+
+# Get all versions from db
+TITLES=$(sqlite3 database/database.sqlite "SELECT number FROM titles WHERE reserved = false;")
+VERSIONS=$(sqlite3 database/database.sqlite "SELECT DISTINCT issue_date FROM versions ORDER BY issue_date ASC;")
+
+for version in $VERSIONS; do
+	for title in $TITLES; do
+		FILE_PATH="$HISTORICAL_FOLDER/title-$title/title-$title-$version.xml.zip"
+		WORKING_FILE="$WORKING_FOLDER/title-$title.xml"
+		echo "Checking $FILE_PATH"
+		if [ -f "$FILE_PATH" ]; then
+			# Copy files into working folder and unzip
+			echo "Copying $FILE_PATH"
+			cp "$FILE_PATH" "$WORKING_FOLDER/"
+			unzip -o "$WORKING_FOLDER/title-$title-$version.xml.zip" -d "$WORKING_FOLDER/"
+			mv "$WORKING_FOLDER/title-$title-$version.xml" $WORKING_FILE
+			find $WORKING_FOLDER -type f -name "*.zip" -delete
+		fi
+	done
+	# Run Rust parser
+	echo "Running Rust parser"
+	./rust/target/release/title_markdown_parser nested
+	exit 0
+done
+
+

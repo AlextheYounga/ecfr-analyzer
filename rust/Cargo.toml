@@ -1,5 +1,5 @@
 [workspace]
 members = [
     "title_markdown_parser",
-    "title_xml_patcher"
+    "large_title_partial_reconstruction"
 ]

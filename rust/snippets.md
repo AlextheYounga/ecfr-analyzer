@@ -221,3 +221,19 @@ fn read_json_file(filepath: PathBuf) -> Value {
     v
 }
 ```
+
+Rustqlite
+```rust
+    let db = db_connection()?;
+    let mut stmt = db.prepare(
+        "SELECT number, structure_reference FROM titles WHERE reserved = false"
+    )?;
+    let title_results: Vec<Result<TitleRecord>> = stmt
+        .query_map([], |row| {
+            Ok(TitleRecord {
+                number: row.get(0)?,
+                structure_reference: row.get(1)?,
+            })
+        })?
+        .collect();
+```

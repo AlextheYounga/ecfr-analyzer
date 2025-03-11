@@ -70,8 +70,6 @@ class FetchCurrentDocumentJob implements ShouldQueue
 
 		// Save to storage folder
 		Storage::disk('storage_drive')->put($filepath, $xml);
-		
-		sleep(1);
     }
 }
 

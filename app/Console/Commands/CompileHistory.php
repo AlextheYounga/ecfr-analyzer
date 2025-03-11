@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Title;
 use Illuminate\Console\Command;
 use App\Jobs\FetchHistoricalDocumentJob;
+use App\Jobs\FetchHistoricalStructureJob;
 use App\Jobs\FetchLargeDocumentPartJob;
 use App\Models\Version;
 use Illuminate\Support\Facades\Storage;
@@ -35,11 +36,12 @@ class CompileHistory extends Command
 	
 		$titles = Title::all();
 		foreach($titles as $title) {
-			if ($title->large) {
-				$this->createLargeDocumentsJobs($title);
-				continue;
-			}
-			$this->createDocumentsJobs($title);
+			$this->createStructureJobs($title);
+			// if ($title->large) {
+			// 	$this->createLargeDocumentsJobs($title);
+			// 	continue;
+			// }
+			// $this->createDocumentsJobs($title);
 		}
     }
 
@@ -50,6 +52,16 @@ class CompileHistory extends Command
 				continue;
 			}
 			FetchHistoricalDocumentJob::dispatch($title->number, $formattedDate);
+		}
+	}
+
+	private function createStructureJobs($title) {
+		foreach($title->versionDates() as $version) {
+			$formattedDate = $version->issue_date->format('Y-m-d');
+			if ($this->structureFileAlreadyDownloaded($title->number, $formattedDate)) {
+				continue;
+			}
+			FetchHistoricalStructureJob::dispatch($title->number, $formattedDate);
 		}
 	}
 
@@ -71,6 +83,17 @@ class CompileHistory extends Command
 	private function fileAlreadyDownloaded($titleNumber, $versionDate) {
 		$folder = 'historical/xml/title-' . $titleNumber;
 		$filename = 'title-' . $titleNumber . '-' . $versionDate . '.xml';
+		$filepath = "ecfr/$folder/$filename.zip";
+		
+		if (Storage::disk('storage_drive')->exists($filepath)) {
+			return true;
+		}
+		return false;
+	}
+
+	private function structureFileAlreadyDownloaded($titleNumber, $versionDate) {
+		$folder = 'historical/structure/title-' . $titleNumber;
+		$filename = 'title-' . $titleNumber . '-' . $versionDate . '-structure.json';
 		$filepath = "ecfr/$folder/$filename.zip";
 		
 		if (Storage::disk('storage_drive')->exists($filepath)) {

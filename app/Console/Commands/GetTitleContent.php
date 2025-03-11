@@ -69,6 +69,22 @@ class GetTitleContent extends Command
 		$this->cleanUp();
     }
 
+	/**
+     * Run Rust parser command to convert title XML to Markdown
+	 * This will almost certainly become unnecessary. 
+     */
+	private function runRustParser() {
+        $this->info('Parsing title XML documents and converting to Markdown');
+		// Run the Rust script with argument
+		$subroutine = 'flat';
+		$structureFolder = env('ECFR_STRUCTURE_FOLDER');	
+		$inputFolder = Storage::disk('local')->path('ecfr/xml');	
+		$outputFolder = Storage::disk('local')->path('ecfr/markdown/flat');
+
+		$command = base_path("./scripts/run_title_markdown_parser $subroutine $structureFolder $inputFolder $outputFolder");
+		shell_exec($command);	
+	}
+
 	// Copy title XML documents to local storage for performance reasons
 	private function copyXmlToStorage() {
 		$this->warn('Copying title XML documents to local storage');
@@ -77,22 +93,6 @@ class GetTitleContent extends Command
 		Storage::disk('local')->makeDirectory('ecfr');
 		Storage::disk('local')->makeDirectory('ecfr/markdown/flat');
 		shell_exec('cp -r ' . $source . ' ' . $destination);
-	}
-
-	/**
-     * Run Rust parser command to convert title XML to Markdown
-	 * This will almost certainly become unnecessary. 
-     */
-	private function runRustParser() {
-        $this->info('Parsing title XML documents and converting to Markdown');
-
-		// Check that the Rust script has been compiled
-		if (!file_exists(base_path('rust/target/release/title_markdown_parser'))) {
-			throw new \Exception('The Rust script has not been compiled. Please run `cargo build --release` in the `rust` directory.');	
-		}
-
-		// Run the Rust script with argument
-		shell_exec(base_path('rust/target/release/title_markdown_parser flat'));
 	}
 
 	// Don't want to store these huge files on my machine

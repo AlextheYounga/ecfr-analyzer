@@ -1,6 +1,8 @@
 use std::fs;
 use std::collections::HashMap;
 use std::io::BufReader;
+use std::path::Path;
+use indicatif::{ProgressBar, ProgressStyle};
 use rayon::prelude::*;
 use xmltree::{Element, XMLNode};
 use serde_json::Value;
@@ -8,9 +10,16 @@ use html2md::parse_html;
 
 pub fn run(input_folder: &str, output_folder: &str, structure_folder: &str) {
 	let title_numbers = 1..51;
-		
+	let pb = instantiate_progress_bar();
+
     title_numbers.into_par_iter().for_each(|title_number| {
 		let title_filename = format!("{}/title-{}.xml", input_folder, title_number);
+
+		if ! Path::new(&title_filename).exists() {
+			println!("Title {} does not exist", title_number);
+			return;
+		}	
+
 		println!("Processing Title {}: {}", title_number, title_filename);
 
 		let file = fs::File::open(&title_filename).unwrap();
@@ -46,7 +55,24 @@ pub fn run(input_folder: &str, output_folder: &str, structure_folder: &str) {
 				}
 			}
 		});
+		pb.inc(1); // increment progress bar
     });
+	pb.finish_with_message("Done!");
+}
+
+fn instantiate_progress_bar() -> ProgressBar {
+	// Create a new progress bar with an upper bound (e.g. 100 items)
+	let pb = ProgressBar::new(50);
+
+	// You can set a custom style similar to Cargo's
+	pb.set_style(
+		ProgressStyle::default_bar()
+			.template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:>7}/{len:7}")
+			.expect("Template was invalid")
+			.progress_chars("#>-"),
+	);
+
+	return pb;
 }
 
 fn build_section_map<'a>(elem: &'a Element, map: &mut HashMap<String, &'a Element>) {

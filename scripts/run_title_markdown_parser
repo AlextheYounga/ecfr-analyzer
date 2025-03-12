@@ -1,9 +1,28 @@
-#!/bin/bash
+source .env 
 
-SUBROUTINE=$1 # nested, flat or full
-INPUT_FOLDER=$2 # Path to the folder containing the XML files
-OUTPUT_FOLDER=$3 # Path to where the markdown files will be saved
-STRUCTURE_FOLDER=$4 # Path where we have saved title structure files
+SUBROUTINE="nested"
+STRUCTURE_FOLDER="$STORAGE_DRIVE/ecfr/current/structure"
+INPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/documents/xml"
+WORKING_FOLDER="./storage/app/private/ecfr"
+WORKING_OUTPUT="$WORKING_FOLDER/markdown/$SUBROUTINE"
+OUTPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/documents/markdown/$SUBROUTINE"
+
+echo "SUBROUTINE: $SUBROUTINE"
+echo "STRUCTURE_FOLDER: $STRUCTURE_FOLDER"
+echo "INPUT_FOLDER: $INPUT_FOLDER"
+echo "WORKING_FOLDER: $WORKING_FOLDER"
+echo "WORKING_OUTPUT: $WORKING_OUTPUT"
+echo "OUTPUT_FOLDER: $OUTPUT_FOLDER"
+
+# Copy the XML files to the storage folder
+mkdir -p $WORKING_OUTPUT
+cp -r $INPUT_FOLDER $WORKING_FOLDER
 
 # Run Rust parser
-./rust/target/release/title_markdown_parser $SUBROUTINE $STRUCTURE_FOLDER $INPUT_FOLDER $OUTPUT_FOLDER
+echo -e "\nRunning Rust parser..."
+./rust/target/release/title_markdown_parser $SUBROUTINE $STRUCTURE_FOLDER $INPUT_FOLDER $WORKING_OUTPUT
+
+echo -e "\nZipping and moving output files..."
+# Move output markdown files to storage drive
+zip -rq "$WORKING_OUTPUT.zip" $WORKING_OUTPUT
+mv "$WORKING_OUTPUT.zip" $OUTPUT_FOLDER.zip

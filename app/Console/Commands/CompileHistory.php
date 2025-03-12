@@ -37,11 +37,11 @@ class CompileHistory extends Command
 		$titles = Title::all();
 		foreach($titles as $title) {
 			$this->createStructureJobs($title);
-			// if ($title->large) {
-			// 	$this->createLargeDocumentsJobs($title);
-			// 	continue;
-			// }
-			// $this->createDocumentsJobs($title);
+			if ($title->large) {
+				$this->createLargeDocumentsJobs($title);
+				continue;
+			}
+			$this->createDocumentsJobs($title);
 		}
     }
 

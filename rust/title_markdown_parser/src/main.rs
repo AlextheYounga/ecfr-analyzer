@@ -1,5 +1,6 @@
 mod scripts;
 use std::env;
+use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Collect the arguments passed to the script
@@ -8,6 +9,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	if args.len() < 4 {
 		eprintln!("Usage: title_markdown_parser <subroutine> <structure_folder> <input_folder> <output_folder>");
 		std::process::exit(1);
+	}
+
+	for arg in &args {
+		if arg == &args[1] { continue; }
+		if !Path::new(arg).exists() {
+			eprintln!("{} does not exist", arg);
+			std::process::exit(1);
+		}
 	}
 
     // Get the first argument

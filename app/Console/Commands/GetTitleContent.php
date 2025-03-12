@@ -81,7 +81,7 @@ class GetTitleContent extends Command
 		$inputFolder = Storage::disk('local')->path('ecfr/xml');	
 		$outputFolder = Storage::disk('local')->path('ecfr/markdown/flat');
 
-		$command = base_path("./scripts/run_title_markdown_parser $subroutine $structureFolder $inputFolder $outputFolder");
+		$command = base_path("./scripts/get_title_content_runner $subroutine $structureFolder $inputFolder $outputFolder");
 		shell_exec($command);	
 	}
 

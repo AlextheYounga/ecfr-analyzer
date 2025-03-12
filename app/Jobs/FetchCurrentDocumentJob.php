@@ -55,21 +55,27 @@ class FetchCurrentDocumentJob implements ShouldQueue
 		$ecfr = new ECFRService();
 
 		// Ensure directory exists
-		$folder = 'ecfr/current/documents/xml';
+		$xmlFolder = 'ecfr/current/documents/xml';
 		$filename = 'title-' . $this->title->number . '.xml';
-		$filepath = "$folder/$filename";
+		$filepath = "$xmlFolder/$filename";
 
-		Storage::disk('storage_drive')->makeDirectory('ecfr/current/documents/xml');
+		Storage::disk('storage_drive')->makeDirectory($xmlFolder);
 		if (Storage::disk('storage_drive')->exists($filepath)) {
 			return;
 		}
 
+		// Create structure folder
+		$structureFolder = 'ecfr/current/structure';
+		Storage::disk('storage_drive')->makeDirectory($structureFolder);
+
 		// Fetch from API
 		$versionDate = $this->title->latest_issue_date->format('Y-m-d');
 		$xml = $ecfr->fetchDocument($this->title->number, $versionDate);
+		$json = $ecfr->fetchStructure($this->title->number, $versionDate);
 
 		// Save to storage folder
 		Storage::disk('storage_drive')->put($filepath, $xml);
+		Storage::disk('storage_drive')->put("$structureFolder/title-{$this->title->number}-structure.json", $json);
     }
 }
 

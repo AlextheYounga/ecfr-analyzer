@@ -1,37 +1,33 @@
 #!/bin/bash
 source .env
 
-subroutine="nested"
-# External drive folders
-historical_structure_folder="$STORAGE_DRIVE/ecfr/historical/structure"
-historical_folder="$STORAGE_DRIVE/ecfr/historical/xml"
+version=$1
+working_folder=$2
+historical_folder=$3
 
-# Local folders
-working_folder="./storage/app/private/ecfr"
+# Data folders
+historical_xml="$historical_folder/xml"
+historical_struct_folder="$historical_folder/structure"
 xml_folder="$working_folder/xml"
-structure_folder="$working_folder/structure"
+struct_folder="$working_folder/structure"
 cfr_output="$GIT_REPO/cfr"
 
-rm -rf ./storage/app/private/ecfr
-
-mkdir -p $xml_folder
-mkdir -p $structure_folder
+subroutine="nested"
 
 function process_version_files() {
 	title=$1
-	version=$2
 
 	# Get file from drive
-	input_file="$historical_folder/title-$title/title-$title-$version.xml.zip"
-	structure_file="$historical_structure_folder/title-$title/title-$title-$version-structure.json.zip"
+	input_file="$historical_xml/title-$title/title-$title-$version.xml.zip"
+	structure_file="$historical_struct_folder/title-$title/title-$title-$version-structure.json.zip"
 
 	function unzip_version_files() {
 		# Unzip files
 		unzip -oq "$xml_folder/title-$title-$version.xml.zip" -d "$xml_folder/"
-		unzip -oq "$structure_folder/title-$title-$version-structure.json.zip" -d "$structure_folder/"
+		unzip -oq "$struct_folder/title-$title-$version-structure.json.zip" -d "$struct_folder/"
 		# Rename files
 		mv "$xml_folder/title-$title-$version.xml" "$xml_folder/title-$title.xml"
-		mv "$structure_folder/title-$title-$version-structure.json" "$structure_folder/title-$title-structure.json"
+		mv "$struct_folder/title-$title-$version-structure.json" "$struct_folder/title-$title-structure.json"
 		# Remove zip files
 		find $working_folder -type f -name "*.zip" -delete
 	}
@@ -39,7 +35,7 @@ function process_version_files() {
 	if [ -f "$input_file" ] && [ -f "$structure_file" ]; then
 		# Copy files to working folder
 		cp "$input_file" "$xml_folder/"
-		cp "$structure_file" "$structure_folder/"
+		cp "$structure_file" "$struct_folder/"
 
 		unzip_version_files
 	fi
@@ -57,14 +53,13 @@ function get_version_changes() {
 	echo "$result"
 }
 
-
 function create_git_description() {
 	changes=$(get_version_changes $1)
 	IFS=$'\n'
 	local description=""
 	for change in $changes; do
 		IFS="|"
-		read -r title_name title_number section_count <<< "$change"
+		read -r title_name title_number section_count <<<"$change"
 		line="Title: $title_number: $title_name - Sections changed: $section_count"
 		description="$description\n$line"
 	done
@@ -74,7 +69,6 @@ function create_git_description() {
 }
 
 function run_git_commands() {
-	version=$1
 	commit_msg="release(cfr): $version issue"
 	description=$(create_git_description $version)
 
@@ -92,35 +86,32 @@ EOF
 
 	git diff HEAD^ --shortstat
 
-	cd - > /dev/null
+	cd - >/dev/null
 }
 
 function run_rust_parser() {
 	echo "Running Rust parser"
-	RUST_BACKTRACE=1 ./rust/target/release/title_markdown_parser $subroutine $structure_folder $xml_folder $cfr_output
+	RUST_BACKTRACE=1 ./rust/target/release/title_markdown_parser $subroutine $struct_folder $xml_folder $cfr_output
 }
 
 # Main loop
+function main() {
+	# Get all versions from db
+	titles=$(sqlite3 database/database.sqlite "SELECT number FROM titles WHERE reserved = false;")
 
-# Get all versions from db
-titles=$(sqlite3 database/database.sqlite "SELECT number FROM titles WHERE reserved = false;")
-versions=$(sqlite3 database/database.sqlite "SELECT DISTINCT issue_date FROM versions ORDER BY issue_date ASC;")
-
-total=$(echo $versions | wc -w)
-i=1
-for version in $versions; do
-	start_time=$(date +%s)
-	echo "Processing version $version ($i/$total)"
+	echo "Processing version $version"
 	for title in $titles; do
-		process_version_files $title $version
+		process_version_files $title
 	done
 	unset IFS
 
 	echo "Run Rust parser"
 	run_rust_parser
-	run_git_commands $version
+	run_git_commands
 
-	i=$((i+1))
-	end_time=$(date +%s)
-	echo -e "Done in $((end_time - start_time)) seconds\n"
-done
+	i=$((i + 1))
+	
+	echo -e "Done\n"
+}
+
+main

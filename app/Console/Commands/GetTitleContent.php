@@ -81,8 +81,18 @@ class GetTitleContent extends Command
 		$inputFolder = Storage::disk('local')->path('ecfr/xml');	
 		$outputFolder = Storage::disk('local')->path('ecfr/markdown/flat');
 
-		$command = base_path("./scripts/get_title_content_runner $subroutine $structureFolder $inputFolder $outputFolder");
-		shell_exec($command);	
+		$shell_command = "./scripts/get_title_content_runner";
+		$command_inputs = [$shell_command, $subroutine, $structureFolder, $inputFolder, $outputFolder, "2>&1"];
+
+		$command = implode(" ", array_map('escapeshellarg', $command_inputs)); // Escape arguments properly
+
+		// Use passthru() for real-time output
+		passthru($command, $exit_code);
+
+		if ($exit_code !== 0) {
+			throw new \Exception("Failed to convert title XML to Markdown. Exit code: $exit_code");
+		}
+
 	}
 
 	// Copy title XML documents to local storage for performance reasons

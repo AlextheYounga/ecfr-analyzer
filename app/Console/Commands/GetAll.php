@@ -31,6 +31,9 @@ class GetAll extends Command
 		$this->info('Starting entities fetch...');
 		$this->call('ecfr:entities');
 
+		$this->info('Starting versions fetch...');
+		$this->call('ecfr:versions');
+
 		$this->info('Starting agencies fetch...');
 		$this->call('ecfr:agencies');
 

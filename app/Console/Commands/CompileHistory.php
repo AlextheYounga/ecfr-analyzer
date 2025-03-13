@@ -18,6 +18,7 @@ class CompileHistory extends Command
      * @var string
      */
     protected $signature = 'ecfr:history';
+	// php artisan queue:work --rest=1 --memory=2000 
 
     /**
      * The console command description.
@@ -37,10 +38,10 @@ class CompileHistory extends Command
 		$titles = Title::all();
 		foreach($titles as $title) {
 			$this->createStructureJobs($title);
-			if ($title->large) {
-				$this->createLargeDocumentsJobs($title);
-				continue;
-			}
+			// if ($title->large) {
+			// 	$this->createLargeDocumentsJobs($title);
+			// 	continue;
+			// }
 			$this->createDocumentsJobs($title);
 		}
     }
@@ -51,6 +52,7 @@ class CompileHistory extends Command
 			if ($this->fileAlreadyDownloaded($title->number, $formattedDate)) {
 				continue;
 			}
+			$this->info("Dispatching fetch document job for " . $title->number . " on " . $formattedDate);
 			FetchHistoricalDocumentJob::dispatch($title->number, $formattedDate);
 		}
 	}
@@ -61,6 +63,7 @@ class CompileHistory extends Command
 			if ($this->structureFileAlreadyDownloaded($title->number, $formattedDate)) {
 				continue;
 			}
+			$this->info("Dispatching fetch structure job for " . $title->number . " on " . $formattedDate);
 			FetchHistoricalStructureJob::dispatch($title->number, $formattedDate);
 		}
 	}
@@ -76,6 +79,7 @@ class CompileHistory extends Command
 			if ($this->largeFileAlreadyDownloaded($title->number, $formattedDate, $version->part)) {
 				continue;
 			}
+			$this->info("Dispatching fetch large document job for " . $title->number . " on " . $formattedDate);
 			FetchLargeDocumentPartJob::dispatch($title->number, $formattedDate, $version->part);	
 		}
 	}

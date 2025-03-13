@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\ECFRService;
 use App\Models\Title;
+use App\Models\TitleEntity;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
@@ -37,7 +38,14 @@ class GetTitleEntities extends Command
         $ecfr = new ECFRService();
 		$titles = Title::all();
 		$this->warn('Truncating TitleEntity table...');
-		DB::delete('DELETE FROM title_entities');
+
+		if (config('database.connection') == 'sqlite') {
+			// SQLite struggles with deleting huge tables
+			$databasePath = config('database.connections.sqlite.database');
+			\shell_exec("sqlite3 $databasePath 'DELETE FROM title_entities'");
+		} else {
+			DB::table('title_entities')->truncate();
+		}	
 
 		foreach($titles as $title) {
 			$this->info("Saving title structure for Title " . $title->number);

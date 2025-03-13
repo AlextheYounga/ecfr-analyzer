@@ -40,6 +40,13 @@ class GetAll extends Command
 		$this->info('Starting fetch documents jobs...');
 		$this->call('ecfr:documents');
 
+		$this->info('Starting fetch documents jobs...');
+		$this->call('queue:work', [
+			'--memory' => 2000,
+			'--rest' => 1,
+			'--stop-when-empty' => true,
+		]);
+
 		$this->info('Starting content mapping...');
 		$this->call('ecfr:content');
 

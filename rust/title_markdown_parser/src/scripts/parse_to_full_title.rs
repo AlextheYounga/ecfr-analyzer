@@ -17,7 +17,6 @@ pub fn run(input_folder: &str, output_folder: &str, structure_folder: &str) {
 		let title_filename = format!("{}/title-{}.xml", input_folder, title_number);
 
 		if ! Path::new(&title_filename).exists() {
-			println!("Title {} does not exist", title_number);
 			return;
 		}	
 

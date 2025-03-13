@@ -47,8 +47,8 @@ class GetTitleContent extends Command
 
 			foreach ($titleEntities as $titleEntity) {
 				$titleEntityId = $titleEntity->identifier;
-				$filePath = 'ecfr/current/markdown/flat/title-' . $title->number . '/' . $titleEntityId . '.md';
-				$markdown = Storage::disk('storage_drive')->get($filePath);
+				$filePath = 'ecfr/markdown/flat/title-' . $title->number . '/' . $titleEntityId . '.md';
+				$markdown = Storage::disk('local')->get($filePath);
 				$wordCount = $this->countWords($markdown);
 				$titleWords += $wordCount;
 

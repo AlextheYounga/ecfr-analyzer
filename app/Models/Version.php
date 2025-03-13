@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Version extends Model
 {
     protected $fillable = [
-		'title_entity_id',
 		'date',
 		'amendment_date',
 		'issue_date',

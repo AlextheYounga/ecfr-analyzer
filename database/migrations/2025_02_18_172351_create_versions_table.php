@@ -14,14 +14,13 @@ return new class extends Migration
         Schema::create('versions', function (Blueprint $table) {
             $table->id();
 			$table->foreignId('title_id');
-			$table->foreignId('title_entity_id')->nullable();
 			$table->date('date');
 			$table->date('amendment_date');
 			$table->date('issue_date');
 			$table->string('title')->nullable();
-			$table->string('type')->nullable();
-			$table->string('identifier')->nullable();
-			$table->string('name')->nullable();
+			$table->string('type')->index()->nullable();
+			$table->string('identifier', 1020)->index()->nullable();
+			$table->string('name', 1530)->nullable();
 			$table->string('part')->nullable();
 			$table->boolean('substantive')->default(false);
 			$table->boolean('removed')->default(false);

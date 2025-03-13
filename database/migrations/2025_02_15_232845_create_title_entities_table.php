@@ -18,10 +18,10 @@ return new class extends Migration
 			$table->integer('level')->index();
 			$table->integer('order_index')->index();
 			$table->string('type')->index();
-			$table->string('identifier')->index()->nullable();
-			$table->string('label')->nullable();
-			$table->string('label_level')->nullable();
-			$table->string('label_description')->nullable();
+			$table->string('identifier', 1020)->index()->nullable();
+			$table->string('label', 1020)->nullable();
+			$table->string('label_level', 1020)->nullable();
+			$table->string('label_description', 1020)->nullable();
 			$table->boolean('reserved')->nullable();
 			$table->integer('size')->nullable();
         });

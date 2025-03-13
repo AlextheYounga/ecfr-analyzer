@@ -28,10 +28,23 @@ class GetAgencyTitleRelations extends Command
     /**
      * Execute the console command.
      */
+
+	protected $entities;
+
     public function handle()
     {
 		DB::table('agency_title_entity')->truncate();	
 		$agencies = Agency::all();
+		$this->entities = TitleEntity::select('id', 'title_id', 'type', 'identifier')
+			->get()
+			->keyBy(function($entity) {
+				return implode('-', [
+					$entity->title_id,
+					$entity->type,
+					$entity->identifier,
+				]);
+			});
+			
 		foreach($agencies as $agency) {
 			$this->info("Saving title_entity relations for " . $agency->id . " " . $agency->name);
 			$references = $agency->cfr_references;
@@ -40,11 +53,7 @@ class GetAgencyTitleRelations extends Command
 			foreach($references as $reference) {
 				$keys = array_keys($reference);
 				$lowestLevel = $keys[count($keys) - 1];
-				$referenceTitle = $this->getReferenceTitle($reference['title']);
-				$referenceEntity = TitleEntity::where('title_id', $referenceTitle->id)
-					->where('type', $lowestLevel)
-					->where('identifier', (string) $reference[$lowestLevel])
-					->first();
+				$referenceEntity = $this->getReferenceEntity($reference['title'], $lowestLevel, $reference[$lowestLevel]);
 
 				if (! $referenceEntity) {
 					$this->error("Title entity not found for title " . $reference['title'] . " " . $lowestLevel . " " . $reference[$lowestLevel]);
@@ -75,17 +84,21 @@ class GetAgencyTitleRelations extends Command
 		}
     }
 
-	private function getReferenceTitle($titleId) {
-		$title = Title::where('number', (int) $titleId)->first();
-		if (! $title) {
-			$titleEntity = TitleEntity::where('type', 'title')
-				->where('identifier', (string) $titleId)
-				->first();
-			$title = $titleEntity->title()->get();
-		}
+	private function getReferenceEntity($titleId, $type, $identifier) {
+		$title = Title::find((int) $titleId);
+
 		if (! $title) {
 			$this->error("Title not found for " . $titleId);
 		}
-		return $title;
+
+		$lookup = implode("-", [
+			'title_id' => $title->id,
+			'type' => $type,
+			'identifier' => (string) $identifier,
+		]);
+
+		$referenceEntity = $this->entities[$lookup] ?? null;
+
+		return $referenceEntity;
 	}
 }

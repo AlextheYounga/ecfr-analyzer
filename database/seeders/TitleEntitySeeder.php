@@ -49,9 +49,9 @@ class TitleEntitySeeder extends Seeder
 			'label' => isset($structure['label']) ? trim($structure['label']) : null,
 			'label_level' => isset($structure['label_level']) ? trim($structure['label_level']) : null,
 			'label_description' => isset($structure['label_description']) ? trim($structure['label_description']) : null,
-			'reserved' => $structure['reserved'] ?? false,
-			'type' => $structure['type'] ?? 'unknown',
-			'size' => $structure['size'] ?? null,
+			'reserved' => (boolean) $structure['reserved'] ?? false,
+			'type' => isset($structure['type']) ? trim($structure['type']) : 'unknown',
+			'size' => isset($structure['size']) ? trim($structure['size']) : null,
 		];
 
 		array_push($this->hashMap, $record);

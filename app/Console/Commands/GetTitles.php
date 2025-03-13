@@ -33,14 +33,15 @@ class GetTitles extends Command
 		// Download Titles
 		$titles = $ecfr->fetchTitles();
 		foreach($titles['titles'] as $title) {
-			$structureFilePath = 'ecfr/current/structure/title-' . $title['number'] . '-structure.json';
+			$titleNumber = trim($title['number']);
+			$structureFilePath = 'ecfr/current/structure/title-' . $titleNumber . '-structure.json';
 			Title::updateOrCreate(
-				['number' => $title['number']],
+				['number' => $titleNumber],
 				[
-					'name' => $title['name'],
-					'latest_amended_on' => $title['latest_amended_on'],
-					'latest_issue_date' => $title['latest_issue_date'],
-					'up_to_date_as_of' => $title['up_to_date_as_of'],
+					'name' => trim($title['name']),
+					'latest_amended_on' => isset($title['latest_amended_on']) ? trim($title['latest_amended_on']) : null,
+					'latest_issue_date' => isset($title['latest_issue_date']) ? trim($title['latest_issue_date']) : null,
+					'up_to_date_as_of' => isset($title['up_to_date_as_of']) ? trim($title['up_to_date_as_of']) : null,
 					'reserved' => $title['reserved'],
 					'structure_reference' => Storage::disk('storage_drive')->path($structureFilePath),
 				]

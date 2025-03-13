@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Models\Version;
 use App\Models\Title;
-use App\Models\TitleEntity;
 use Illuminate\Support\Facades\Storage;
 
 class VersionSeeder extends Seeder
@@ -15,10 +13,12 @@ class VersionSeeder extends Seeder
     /**
      * Run the database seeds.
      */
+
     public function run(): void
     {
 		Version::truncate();
 		$titles = Title::all();	
+
 		// Download Versions
 		$inserted = 0;
 		foreach($titles as $title) {
@@ -31,18 +31,17 @@ class VersionSeeder extends Seeder
 			foreach($versions['content_versions'] as $version) {
 				array_push($versionRecords, [
 					'title_id' => $title->id,	
-					'title_entity_id' => $this->getTitleEntity($title, $version['identifier'], $version['type']),
-					'date' => $version['date'],
-					'amendment_date' => $version['amendment_date'],
-					'issue_date' => $version['issue_date'],
-					'title' => $version['title'],
-					'type' => $version['type'],
-					'identifier' => $version['identifier'],
-					'name' => $version['name'],
-					'part' => $version['part'],
-					'substantive' => $version['substantive'],
-					'removed' => $version['removed'],
-					'subpart' => $version['subpart'],
+					'date' => isset($version['date']) ? trim($version['date']) : null,
+					'amendment_date' => isset($version['amendment_date']) ? trim($version['amendment_date']) : null,
+					'issue_date' => isset($version['issue_date']) ? trim($version['issue_date']) : null,
+					'title' => isset($version['title']) ? trim($version['title']) : null,
+					'type' => trim($version['type']),
+					'identifier' => trim($version['identifier']),
+					'name' => isset($version['name']) ? trim($version['name']) : null,
+					'part' => isset($version['part']) ? trim($version['part']) : null,
+					'substantive' => isset($version['substantive']) ? (boolean) $version['substantive'] : false,
+					'removed' => isset($version['removed']) ? (boolean) $version['removed'] : false,
+					'subpart' => isset($version['subpart']) ? trim($version['subpart']) : null,
 				]);
 			}
 	
@@ -59,15 +58,5 @@ class VersionSeeder extends Seeder
 			]);
 			$title->save();
 		}
-
     }
-
-	private function getTitleEntity($title, $identifier, $type) {
-		$titleEntity = TitleEntity::where('title_id', $title->id)
-			->where('identifier', $identifier)
-			->where('type', $type)
-			->first();
-		
-		return $titleEntity != null ? $titleEntity->id : null;
-	}
 }

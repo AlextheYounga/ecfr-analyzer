@@ -45,7 +45,6 @@ function get_version_changes() {
 	sql="SELECT t.name AS title_name, t.number AS title_number, COUNT(v.id) AS section_count
 		FROM versions v
 		JOIN titles t ON t.id = v.title_id
-		JOIN title_entities te ON te.id = v.title_entity_id
 		WHERE v.issue_date = '$1'
 		GROUP BY t.name;"
 

@@ -15,7 +15,7 @@ class GetTitleContent extends Command
      *
      * @var string
      */
-    protected $signature = 'ecfr:content';
+    protected $signature = 'ecfr:content {--fast}';
 
     /**
      * The console command description.
@@ -30,6 +30,10 @@ class GetTitleContent extends Command
     public function handle()
     {
 		TitleContent::truncate();
+
+		if ($this->option('fast')) {
+			return $this->mapTitleContent();
+		}
 
 		$this->runRustParser();
 		$this->mapTitleContent();

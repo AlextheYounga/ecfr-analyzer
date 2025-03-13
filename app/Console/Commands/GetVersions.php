@@ -15,7 +15,7 @@ class GetVersions extends Command
      *
      * @var string
      */
-    protected $signature = 'ecfr:versions';
+    protected $signature = 'ecfr:versions {--fast}';
 
     /**
      * The console command description.
@@ -37,6 +37,14 @@ class GetVersions extends Command
 		foreach($titles as $title) {
 			$this->info("Fetching versions for title " . $title->number);
 
+			$filename = 'ecfr/current/versions/title-'. $title->number . '-versions.json';
+			if ($this->option('fast')) {
+				if (Storage::disk('storage_drive')->exists($filename)) {
+					$this->info("File already downloaded: " . $filename);
+					continue;
+				}
+			}
+
 			// Fetch from API
 			$versions = $ecfr->fetchVersions($title->number);
 
@@ -44,7 +52,6 @@ class GetVersions extends Command
 			Storage::disk('storage_drive')->makeDirectory('ecfr/current/versions');
 
 			// Save to disk
-			$filename = 'ecfr/current/versions/title-'. $title->number . '-versions.json';
 			Storage::disk('storage_drive')->put($filename, json_encode($versions));
 
 			sleep(0.5);
@@ -52,6 +59,4 @@ class GetVersions extends Command
 
 		$this->call('db:seed', ['--class' => 'VersionSeeder']);
     }
-
-
 }

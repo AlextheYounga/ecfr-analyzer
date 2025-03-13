@@ -11,7 +11,7 @@ class GetAll extends Command
      *
      * @var string
      */
-    protected $signature = 'ecfr:all';
+	protected $signature = 'ecfr:all {--fast}';
 
     /**
      * The console command description.
@@ -25,14 +25,19 @@ class GetAll extends Command
      */
     public function handle()
     {
+		$options = [];
+		if ($this->option('fast')) {
+			$options['--fast'] = true;
+		}
+
 		$this->info('Starting titles fetch...');
         $this->call('ecfr:titles');
 
 		$this->info('Starting entities fetch...');
-		$this->call('ecfr:entities');
+		$this->call('ecfr:entities', $options);
 
 		$this->info('Starting versions fetch...');
-		$this->call('ecfr:versions');
+		$this->call('ecfr:versions', $options);
 
 		$this->info('Starting agencies fetch...');
 		$this->call('ecfr:agencies');
@@ -43,12 +48,12 @@ class GetAll extends Command
 		$this->info('Starting fetch documents jobs...');
 		$this->call('queue:work', [
 			'--memory' => 2000,
-			'--rest' => 1,
+			'--rest' => 0.5,
 			'--stop-when-empty' => true,
 		]);
 
 		$this->info('Starting content mapping...');
-		$this->call('ecfr:content');
+		$this->call('ecfr:content', $options);
 
 		$this->info('Starting agency titles mapping...');
 		$this->call('ecfr:agency-titles');

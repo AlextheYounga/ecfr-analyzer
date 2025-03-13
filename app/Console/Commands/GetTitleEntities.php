@@ -16,7 +16,7 @@ class GetTitleEntities extends Command
      *
      * @var string
      */
-    protected $signature = 'ecfr:entities';
+    protected $signature = 'ecfr:entities {--fast}';
 
     /**
      * The console command description.
@@ -49,6 +49,14 @@ class GetTitleEntities extends Command
 
 		foreach($titles as $title) {
 			$this->info("Saving title structure for Title " . $title->number);
+			$filepath = 'ecfr/current/structure/title-' . $title->number . '-structure.json';
+
+			if ($this->option('fast')) {
+				if (Storage::disk('storage_drive')->exists($filepath)) {
+					$this->info("File already downloaded: " . $filepath);
+					continue;
+				}
+			}
 
 			if ($title['reserved']) {
 				$this->info("Title is reserved, skipping");
@@ -69,7 +77,6 @@ class GetTitleEntities extends Command
 			}
 
 			// Save the structure to a file
-			$filepath = 'ecfr/current/structure/title-' . $titleNumber . '-structure.json';
 			Storage::disk('storage_drive')->put($filepath, $structure);	
 			sleep(1);
 		}	

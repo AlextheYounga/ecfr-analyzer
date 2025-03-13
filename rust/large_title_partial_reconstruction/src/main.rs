@@ -31,7 +31,7 @@ fn get_large_documents(db: &Connection) -> Vec<i32> {
 }
 
 fn read_latest_issue_document(storage_folder: &str, doc_num: i32) -> Element {
-	let current_folder = format!("{}/ecfr/current/documents/xml", storage_folder);
+	let current_folder = format!("{}/ecfr/current/xml", storage_folder);
 	let filepath = format!("{}/title-{}.xml", current_folder, doc_num);
 
 	let file = fs::File::open(&filepath).expect(&format!("Failed to open file: {}", filepath));

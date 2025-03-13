@@ -30,9 +30,14 @@ class GetTitleContent extends Command
     public function handle()
     {
 		TitleContent::truncate();
-		$this->copyXmlToStorage();
+
 		$this->runRustParser();
-	
+		$this->mapTitleContent();
+
+		$this->saveToDrive();
+    }
+
+	private function mapTitleContent() {
 		$titles = Title::all();
 		foreach ($titles as $title) {
 			$contentMap = [];
@@ -42,7 +47,7 @@ class GetTitleContent extends Command
 
 			foreach ($titleEntities as $titleEntity) {
 				$titleEntityId = $titleEntity->identifier;
-				$filePath = 'ecfr/current/documents/markdown/flat/title-' . $title->number . '/' . $titleEntityId . '.md';
+				$filePath = 'ecfr/current/markdown/flat/title-' . $title->number . '/' . $titleEntityId . '.md';
 				$markdown = Storage::disk('storage_drive')->get($filePath);
 				$wordCount = $this->countWords($markdown);
 				$titleWords += $wordCount;
@@ -64,10 +69,7 @@ class GetTitleContent extends Command
 			$title->word_count = $titleWords;
 			$title->save();
 		}
-
-		$this->moveMarkdownToStorageDrive();
-		$this->cleanUp();
-    }
+	}
 
 	/**
      * Run Rust parser command to convert title XML to Markdown
@@ -76,57 +78,43 @@ class GetTitleContent extends Command
 	private function runRustParser() {
         $this->info('Parsing title XML documents and converting to Markdown');
 		// Run the Rust script with argument
-		$subroutine = 'flat';
-		$structureFolder = env('ECFR_STRUCTURE_FOLDER');	
-		$inputFolder = Storage::disk('local')->path('ecfr/xml');	
-		$outputFolder = Storage::disk('local')->path('ecfr/markdown/flat');
+		$input_folder = Storage::disk('storage_drive')->path('ecfr/current'); // Files to convert
+		$output_folder = Storage::disk('local')->path('ecfr'); // Where we're going to store the files
 
 		$shell_command = "./scripts/get_title_content_runner";
-		$command_inputs = [$shell_command, $subroutine, $structureFolder, $inputFolder, $outputFolder, "2>&1"];
-
+		$command_inputs = [$shell_command, $input_folder, $output_folder, "2>&1"];
 		$command = implode(" ", array_map('escapeshellarg', $command_inputs)); // Escape arguments properly
-
+		
 		// Use passthru() for real-time output
 		passthru($command, $exit_code);
 
 		if ($exit_code !== 0) {
 			throw new \Exception("Failed to convert title XML to Markdown. Exit code: $exit_code");
 		}
-
 	}
 
-	// Copy title XML documents to local storage for performance reasons
-	private function copyXmlToStorage() {
-		$this->warn('Copying title XML documents to local storage');
-		$source = Storage::disk('storage_drive')->path('ecfr/current/documents/xml/');
-		$destination = Storage::disk('local')->path('ecfr');
-		Storage::disk('local')->makeDirectory('ecfr');
-		Storage::disk('local')->makeDirectory('ecfr/markdown/flat');
-		shell_exec('cp -r ' . $source . ' ' . $destination);
-	}
+	/**
+     * Run script to save output to drive and cleanup
+     */
+	private function saveToDrive() {
+		$outputFolder = Storage::disk('local')->path('ecfr/markdown/flat'); // Where we're going to store the files
+		$driveFolder = Storage::disk('storage_drive')->path('ecfr/current/markdown'); // Where we're going to store the files
 
-	// Don't want to store these huge files on my machine
-	private function moveMarkdownToStorageDrive() {
-		$source = Storage::disk('local')->path('ecfr/markdown/flat');
-		$destination = Storage::disk('storage_drive')->path('ecfr/current/documents/markdown/flat');
+		$shell_command = "./scripts/save_output_to_drive";
+		$command_inputs = [$shell_command, $outputFolder, $driveFolder, "2>&1"];
+		$command = implode(" ", array_map('escapeshellarg', $command_inputs)); // Escape arguments properly
+		
+		// Use passthru() for real-time output
+		passthru($command, $exit_code);
 
-		$this->warn('Zipping markdown files...');
-		shell_exec("zip -rq $source.zip $source");
-
-		$this->warn('Moving markdown files to storage drive...');
-		shell_exec('mv ' . $source . '.zip ' . $destination);
+		if ($exit_code !== 0) {
+			throw new \Exception("Failed to convert title XML to Markdown. Exit code: $exit_code");
+		}
 	}
 
 	private function countWords($text) {
 		// Word Count
 		$words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
 		return count($words);
-	}
-
-	private function cleanUp() {
-		// Clean up
-		$this->info('Cleaning up temporary files');
-		$source = Storage::disk('local')->path('ecfr');
-		shell_exec('rm -r ' . $source);
 	}
 }

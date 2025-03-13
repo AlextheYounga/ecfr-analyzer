@@ -1,0 +1,12 @@
+#!/bin/bash
+
+output_folder=$1
+drive_folder=$2
+
+echo "Zipping markdown files..."
+zip -rq $output_folder.zip $output_folder
+
+echo "Moving markdown files to storage drive..."
+mv $output_folder.zip $drive_folder
+
+rm -rf $output_folder

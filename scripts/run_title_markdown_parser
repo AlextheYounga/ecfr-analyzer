@@ -1,11 +1,11 @@
 source .env 
 
-SUBROUTINE="nested"
+SUBROUTINE="flat"
 STRUCTURE_FOLDER="$STORAGE_DRIVE/ecfr/current/structure"
-INPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/documents/xml"
+INPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/xml"
 WORKING_FOLDER="./storage/app/private/ecfr"
 WORKING_OUTPUT="$WORKING_FOLDER/markdown/$SUBROUTINE"
-OUTPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/documents/markdown/$SUBROUTINE"
+OUTPUT_FOLDER="$STORAGE_DRIVE/ecfr/current/markdown/$SUBROUTINE"
 
 echo "SUBROUTINE: $SUBROUTINE"
 echo "STRUCTURE_FOLDER: $STRUCTURE_FOLDER"

@@ -20,8 +20,6 @@ pub fn run(input_folder: &str, output_folder: &str, structure_folder: &str) {
 			return;
 		}	
 
-		println!("Processing Title {}: {}", title_number, title_filename);
-
 		let file = fs::File::open(&title_filename).unwrap();
 		let root = Element::parse(BufReader::new(file)).unwrap();
 

@@ -55,7 +55,7 @@ class FetchCurrentDocumentJob implements ShouldQueue
 		$ecfr = new ECFRService();
 
 		// Ensure directory exists
-		$xmlFolder = 'ecfr/current/documents/xml';
+		$xmlFolder = 'ecfr/current/xml';
 		$filename = 'title-' . $this->title->number . '.xml';
 		$filepath = "$xmlFolder/$filename";
 

@@ -1,10 +1,17 @@
-#!/bin/bash
+source .env 
 
+subroutine="flat"
+input_folder=$1
+output_folder=$2
 
-SUBROUTINE=$1 # nested, flat or full
-INPUT_FOLDER=$2 # Path to the folder containing the XML files
-OUTPUT_FOLDER=$3 # Path to where the markdown files will be saved
-STRUCTURE_FOLDER=$4 # Path where we have saved title structure files
+structure_folder="$input_folder/structure"
+source_xml="$input_folder/xml"
+md_output="$output_folder/markdown/$subroutine"
+
+# Copy the XML files to the storage folder
+mkdir -p $md_output
+cp -r $source_xml $output_folder
 
 # Run Rust parser
-./rust/target/release/title_markdown_parser $SUBROUTINE $STRUCTURE_FOLDER $INPUT_FOLDER $OUTPUT_FOLDER
+echo -e "\nRunning Rust parser..."
+./rust/target/release/title_markdown_parser $subroutine $structure_folder $source_xml $md_output

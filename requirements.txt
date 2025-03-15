@@ -4,3 +4,7 @@ numpy
 openai
 llama-cpp-python
 python-dotenv
+ollama
+sentence_transformers
+tiktoken
+nltk

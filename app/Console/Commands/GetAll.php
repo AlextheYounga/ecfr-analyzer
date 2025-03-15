@@ -48,7 +48,7 @@ class GetAll extends Command
 		$this->info('Starting fetch documents jobs...');
 		$this->call('queue:work', [
 			'--memory' => 2000,
-			'--rest' => 0.5,
+			'--rest' => $this->option('fast') ? 0 : 1,
 			'--stop-when-empty' => true,
 		]);
 
